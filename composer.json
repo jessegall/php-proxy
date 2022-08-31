@@ -1,0 +1,22 @@
+{
+    "name": "jessegall/proxy",
+    "autoload": {
+        "psr-4": {
+            "JesseGall\\Proxy\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jesse Gall"
+        }
+    ],
+    "scripts": {
+        "test": "phpunit tests"
+    },
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
+    }
+}
