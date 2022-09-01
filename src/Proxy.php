@@ -2,12 +2,16 @@
 
 namespace JesseGall\Proxy;
 
+use JesseGall\Proxy\Concerns\ForwardsInteractions;
+use JesseGall\Proxy\Concerns\WrapsValues;
+
 /**
  * @template T
  * @mixin T
  */
 class Proxy
 {
+    use ForwardsInteractions, WrapsValues;
 
     /**
      * @var T
@@ -32,34 +36,23 @@ class Proxy
      */
     public function __call(string $method, array $parameters): mixed
     {
-        return $this->wrapIfIsObject($this->subject->{$method}(...$parameters));
+        return $this->wrapIfValueIsObject(
+            $this->forwardCallTo($this->subject, $method, $parameters)
+        );
     }
 
     /**
      * Forward the property accessor to the subject.
      * Wraps the result in a proxy if the result is an object.
      *
-     * @param string $name
+     * @param string $property
      * @return mixed
      */
-    public function __get(string $name): mixed
+    public function __get(string $property): mixed
     {
-        return $this->wrapIfIsObject($this->subject->{$name});
-    }
-
-    /**
-     * Wrap value in a proxy when value is an object
-     *
-     * @param mixed $value
-     * @return mixed
-     */
-    protected function wrapIfIsObject(mixed $value): mixed
-    {
-        if (is_object($value)) {
-            return new static($value);
-        }
-
-        return $value;
+        return $this->wrapIfValueIsObject(
+            $this->forwardGetTo($this->subject, $property)
+        );
     }
 
 }

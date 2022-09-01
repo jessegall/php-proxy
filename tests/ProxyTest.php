@@ -87,10 +87,12 @@ class ProxyTest extends TestCase
 
             public function getWrapped()
             {
-                return parent::wrapIfIsObject($this->subject);
+                return parent::wrapIfValueIsObject($this->subject);
             }
 
         };
+
+//        die(get_class($proxy) . '   ' . get_class($proxy->getWrapped()));
 
         $this->assertEquals(
             get_class($proxy),

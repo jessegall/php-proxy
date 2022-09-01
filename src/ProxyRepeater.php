@@ -4,7 +4,9 @@ namespace JesseGall\Proxy;
 
 use Closure;
 use Exception;
+use JesseGall\Proxy\Concerns\ForwardsInteractions;
 use JesseGall\Proxy\Exceptions\MaxAttemptsExceededException;
+use JesseGall\Proxy\Handlers\ProxyRepeaterHandler;
 
 /**
  * @template T
@@ -12,8 +14,12 @@ use JesseGall\Proxy\Exceptions\MaxAttemptsExceededException;
  */
 class ProxyRepeater extends Proxy
 {
+    use ForwardsInteractions {
+        forwardCallTo as private __forwardCallTo;
+        forwardGetTo as private __forwardGetTo;
+    }
 
-    protected ?Closure $handler;
+    protected ProxyRepeaterHandler $handler;
     protected int $maxAttempts;
     protected int $attempts;
 
@@ -26,29 +32,9 @@ class ProxyRepeater extends Proxy
     {
         parent::__construct($subject);
 
-        $this->handler = $handler;
+        $this->handler = new ProxyRepeaterHandler($handler);
         $this->maxAttempts = $maxAttempts;
         $this->attempts = 0;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function __call(string $method, array $parameters): mixed
-    {
-        return $this->try(
-            fn() => parent::__call($method, $parameters),
-        );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function __get(string $name): mixed
-    {
-        return $this->try(
-            fn() => parent::__get($name),
-        );
     }
 
     /**
@@ -76,6 +62,26 @@ class ProxyRepeater extends Proxy
     }
 
     /**
+     * @throws Exception
+     */
+    protected function forwardCallTo(object $subject, string $method, $parameters): mixed
+    {
+        return $this->try(
+            fn() => $this->__forwardCallTo($subject, $method, $parameters)
+        );
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function forwardGetTo(object $subject, string $property): mixed
+    {
+        return $this->try(
+            fn() => $this->__forwardGetTo($subject, $property)
+        );
+    }
+
+    /**
      * Runs the closure and catches the error if an exception is thrown.
      * If an exception is thrown and the handler is null or the handler returns true, repeat.
      *
@@ -90,7 +96,7 @@ class ProxyRepeater extends Proxy
                 throw new MaxAttemptsExceededException();
             }
 
-            $shouldRepeat = is_null($this->handler) || ($this->handler)($exception, $this);
+            $shouldRepeat = ($this->handler)($exception, $this);
 
             if ($shouldRepeat) {
                 return $this->try($closure);
