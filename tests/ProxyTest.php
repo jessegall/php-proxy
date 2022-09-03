@@ -18,7 +18,6 @@ use Test\TestClasses\TestTarget;
 class ProxyTest extends TestCase
 {
 
-
     public function test_call_is_forwarded_to_forwarder_and_expected_value_is_returned()
     {
         $proxy = new Proxy(new TestTarget());
@@ -75,19 +74,6 @@ class ProxyTest extends TestCase
         $proxy->set = 'new value';
     }
 
-    public function test_when_exception_is_thrown_the_handler_is_called()
-    {
-        $proxy = new Proxy(new TestTarget());
-
-        $proxy->setExceptionHandler($handler = $this->createMock(ExceptionHandler::class));
-
-        $handler->expects($this->once())
-            ->method('handle')
-            ->with(new FailedAction(new TestException(), fn() => 0, $proxy));
-
-        $proxy->call(fn() => throw new TestException());
-    }
-
     public function test_result_is_decorated_when_value_is_an_object()
     {
         $proxy = new class(new TestTarget()) extends Proxy {
@@ -109,7 +95,7 @@ class ProxyTest extends TestCase
         );
     }
 
-    public function test_cloned_proxy_is_equal_except_for_target()
+    public function test_new_proxy_parent_is_correctly_set_when_decorating_object()
     {
         $proxy = new class(new TestTarget()) extends Proxy {
             public function decorateObject(object $object): Proxy
@@ -118,14 +104,26 @@ class ProxyTest extends TestCase
             }
         };
 
-        $clone = $proxy->decorateObject(new \stdClass());
+        $newProxy = $proxy->decorateObject(new \stdClass());
 
-        $proxy->setTarget($clone->getTarget()); // To make the target equal
-
-        $this->assertEquals($proxy, $clone);
+        $this->assertEquals($proxy->getForwarder(), $newProxy->getForwarder());
     }
 
-    public function test_interaction_is_registered_when_concluded()
+    public function test_new_proxy_has_same_forwarder_as_parent()
+    {
+        $proxy = new class(new TestTarget()) extends Proxy {
+            public function decorateObject(object $object): Proxy
+            {
+                return parent::decorateObject($object);
+            }
+        };
+
+        $newProxy = $proxy->decorateObject(new \stdClass());
+
+        $this->assertEquals($proxy->getForwarder(), $newProxy->getForwarder());
+    }
+
+    public function test_interactions_are_logged_when_concluded()
     {
         $proxy = new class(new TestTarget()) extends Proxy {
             protected function forwardCall(string $method, array $parameters): ConcludedInteraction
@@ -155,15 +153,6 @@ class ProxyTest extends TestCase
         $proxy->get;
 
         $this->assertCount(3, $proxy->getConcludedInteractions());
-    }
-
-    public function test_get_exception_handler_returns_expected_value()
-    {
-        $proxy = new Proxy(new TestTarget());
-
-        $proxy->setExceptionHandler($handler = new ExceptionHandler());
-
-        $this->assertEquals($handler, $proxy->getExceptionHandler());
     }
 
     public function test_get_target_returns_expected_value()

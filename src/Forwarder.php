@@ -2,8 +2,11 @@
 
 namespace JesseGall\Proxy;
 
+use Closure;
+use Exception;
+use JesseGall\Proxy\Contracts\HasResult;
+use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Interactions\Call;
-use JesseGall\Proxy\Interactions\Contract\ReturnResultContract;
 use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\Set;
@@ -17,7 +20,7 @@ class Forwarder
 {
 
     /**
-     * Mapping of the forward strategies
+     * Mapping of the forward strategies.
      *
      * @var array<class-string<Interaction>, class-string<ForwardStrategy>>
      */
@@ -28,27 +31,45 @@ class Forwarder
     ];
 
     /**
-     * @var InterceptorContract[]
+     * The list of registered interceptors.
+     *
+     * @var Intercepts[]
      */
     protected array $interceptors = [];
 
     /**
-     * Register interceptor
+     * The exception handler.
      *
-     * @param InterceptorContract|class-string<InterceptorContract> $interceptor
+     * @var ExceptionHandler
+     */
+    protected ExceptionHandler $exceptionHandler;
+
+    public function __construct()
+    {
+        $this->exceptionHandler = new ExceptionHandler();
+    }
+
+    /**
+     * Register an interceptor.
+     *
+     * @param Intercepts|class-string<Intercepts>|class-string<Intercepts>[] $interceptor
      * @return void
      */
-    public function register(InterceptorContract|string $interceptor): void
+    public function registerInterceptor(Intercepts|string|array $interceptor): void
     {
-        if (is_string($interceptor)) {
-            if (! is_subclass_of($interceptor, InterceptorContract::class)) {
-                throw new \InvalidArgumentException('Class must be an instance of InterceptorContract');
+        if (is_string($interceptor) || is_array($interceptor)) {
+            $interceptor = (array)$interceptor;
+
+            foreach ($interceptor as $type) {
+                if (! is_subclass_of($type, Intercepts::class)) {
+                    throw new \InvalidArgumentException('Type must be an instance of InterceptorContract');
+                }
+
+                $this->interceptors[] = new $type();
             }
-
-            $interceptor = new $interceptor;
+        } else {
+            $this->interceptors[] = $interceptor;
         }
-
-        $this->interceptors[] = $interceptor;
     }
 
     /**
@@ -67,24 +88,42 @@ class Forwarder
             return new ConcludedInteraction($interaction);
         }
 
-        $strategy = $this->newForwardStrategy($interaction);
+        $result = $this->newForwardStrategy($interaction)->execute();
 
-        $result = $strategy->execute();
-
-        if ($interaction instanceof ReturnResultContract) {
+        if ($interaction instanceof HasResult) {
             $interaction->setResult($result);
         }
+
+        $interaction->setStatus(Status::FULFILLED);
 
         return new ConcludedInteraction($interaction);
     }
 
     /**
-     * Create a new forward strategy for the given interaction
+     * Attempt to execute the given strategy.
+     * Forwards exceptions to exception handler.
+     *
+     * @param ForwardStrategy $strategy
+     * @return mixed
+     */
+    protected function try(ForwardStrategy $strategy): mixed
+    {
+        try {
+            return $strategy->execute();
+        } catch (Exception $exception) {
+            return $this->exceptionHandler->handle(
+                new FailedExecution($strategy, $exception)
+            );
+        }
+    }
+
+    /**
+     * Create a new forward strategy for the given interaction.
      *
      * @param Interaction $interaction
      * @return ForwardStrategy
      */
-    private function newForwardStrategy(Interaction $interaction): ForwardStrategy
+    protected function newForwardStrategy(Interaction $interaction): ForwardStrategy
     {
         $type = $this->strategies[$interaction::class];
 
@@ -92,7 +131,7 @@ class Forwarder
     }
 
     /**
-     * Notify interceptors about an interaction.
+     * Notify interceptors about an incoming interaction.
      *
      * @param Interaction $interaction
      * @return void
@@ -107,7 +146,7 @@ class Forwarder
     # --- Getters and Setters ---
 
     /**
-     * @return InterceptorContract[]
+     * @return Intercepts[]
      */
     public function getInterceptors(): array
     {
@@ -118,9 +157,66 @@ class Forwarder
      * @param array $interceptors
      * @return $this
      */
-    public function setInterceptors(array $interceptors): Forwarder
+    public function setInterceptors(array $interceptors): static
     {
         $this->interceptors = $interceptors;
+
+        return $this;
+    }
+
+    /**
+     * @return array<class-string<Interaction>, class-string<ForwardStrategy>>
+     */
+    public function getStrategies(): array
+    {
+        return $this->strategies;
+    }
+
+    /**
+     * @param array<class-string<Interaction>, class-string<ForwardStrategy>> $strategies
+     * @return Forwarder
+     */
+    public function setStrategies(array $strategies): static
+    {
+        $this->strategies = [];
+
+        foreach ($strategies as $interaction => $strategy) {
+            $this->setStrategy($interaction, $strategy);
+        }
+
+        return $this;
+    }
+
+    public function setStrategy(string $interaction, string $strategy): static
+    {
+        if (! is_subclass_of($interaction, Interaction::class)) {
+            throw new \InvalidArgumentException('$interaction must be an instance of Interaction');
+        }
+
+        if (! is_subclass_of($strategy, ForwardStrategy::class)) {
+            throw new \InvalidArgumentException('$strategy must be an instance of ForwardStrategy');
+        }
+
+        $this->strategies[$interaction] = $strategy;
+
+        return $this;
+    }
+
+    /**
+     * @return ExceptionHandler
+     */
+    public function getExceptionHandler(): ExceptionHandler
+    {
+        return $this->exceptionHandler;
+    }
+
+    /**
+     * @param ExceptionHandler $exceptionHandler
+     * @return Forwarder
+     */
+    public function setExceptionHandler(ExceptionHandler $exceptionHandler): static
+    {
+        $this->exceptionHandler = $exceptionHandler;
 
         return $this;
     }

@@ -1,8 +1,8 @@
 <?php
 
-namespace JesseGall\Proxy\Interactions\Contract;
+namespace JesseGall\Proxy\Contracts;
 
-interface ReturnResultContract
+interface HasResult
 {
 
     public function getResult(): mixed;

@@ -27,7 +27,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9",
-        "symfony/var-dumper": "^6.1"
+        "symfony/var-dumper": "^6.1",
+        "spatie/ray": "^1.36"
     },
     "license": "MIT"
 }

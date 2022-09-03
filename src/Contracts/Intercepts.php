@@ -1,10 +1,10 @@
 <?php
 
-namespace JesseGall\Proxy;
+namespace JesseGall\Proxy\Contracts;
 
 use JesseGall\Proxy\Interactions\Interaction;
 
-interface InterceptorContract
+interface Intercepts
 {
 
     public function intercept(Interaction $interaction): void;

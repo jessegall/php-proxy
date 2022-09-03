@@ -1,10 +1,10 @@
 <?php
 
-namespace JesseGall\Proxy\Interactions\Concerns;
+namespace JesseGall\Proxy\Interactions;
 
-use JesseGall\Proxy\Interactions\Status;
+use JesseGall\Proxy\Contracts\HasResult;
 
-trait HasResult
+abstract class InteractionWithResult extends Interaction implements HasResult
 {
 
     /**

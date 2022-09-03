@@ -2,10 +2,13 @@
 
 namespace JesseGall\Proxy\Interactions;
 
+use JesseGall\Proxy\Contracts\Interacts;
+
 /**
  * @template  T
+ * @implements Interacts<T>
  */
-abstract class Interaction
+abstract class Interaction implements Interacts
 {
 
     /**

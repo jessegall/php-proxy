@@ -2,13 +2,8 @@
 
 namespace JesseGall\Proxy\Interactions;
 
-use JesseGall\Proxy\Interactions\Concerns\HasResult;
-use JesseGall\Proxy\Interactions\Contract\ReturnResultContract;
-
-class Call extends Interaction implements ReturnResultContract
+class Call extends InteractionWithResult
 {
-    use HasResult;
-
     protected string $method;
     protected array $parameters;
 

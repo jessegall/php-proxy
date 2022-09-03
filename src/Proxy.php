@@ -22,25 +22,23 @@ class Proxy
     protected object $target;
 
     /**
+     * @var Proxy|null
+     */
+    private ?Proxy $parent;
+
+    /**
+     * The list of concluded interactions
+     *
+     * @var ConcludedInteraction[]
+     */
+    protected array $concludedInteractions;
+
+    /**
      * The interaction forwarder of the proxy
      *
      * @var Forwarder
      */
     protected Forwarder $forwarder;
-
-    /**
-     * The exception handler of the proxy
-     *
-     * @var ExceptionHandler
-     */
-    protected ExceptionHandler $exceptionHandler;
-
-    /**
-     * A list of concluded interactions
-     *
-     * @var ConcludedInteraction[]
-     */
-    protected array $concludedInteractions;
 
     /**
      * T $subject
@@ -49,13 +47,12 @@ class Proxy
     {
         $this->target = $target;
         $this->forwarder = new Forwarder();
-        $this->exceptionHandler = new ExceptionHandler();
         $this->concludedInteractions = [];
     }
 
     /**
      * Intercept method calls directed at the target.
-     * Forwards the interaction to the forwarder and registers the interaction.
+     * Forwards the interaction to the forwarder and log the interaction.
      * If the returned result is an object, return new proxy where the target is the result.
      *
      * @param string $method
@@ -64,20 +61,18 @@ class Proxy
      */
     public function __call(string $method, array $parameters): mixed
     {
-        return $this->try(function () use ($method, $parameters) {
-            $concluded = $this->forwardCall($method, $parameters);
+        $concluded = $this->forwardCall($method, $parameters);
 
-            $this->registerConcludedInteraction($concluded);
+        $this->logInteraction($concluded);
 
-            return $this->decorateIfIsObject(
-                $concluded->getResult()
-            );
-        });
+        return $this->decorateIfIsObject(
+            $concluded->getResult()
+        );
     }
 
     /**
-     * Intercepts attempts to access a property of the target.
-     * Forwards the interaction to the forwarder and registers the interaction.
+     * Intercept attempts to access a property of the target.
+     * Forwards the interaction to the forwarder and log the interaction.
      * If the returned result is an object, return new proxy where the target is the result.
      *
      * @param string $property
@@ -85,20 +80,18 @@ class Proxy
      */
     public function __get(string $property): mixed
     {
-        return $this->try(function () use ($property) {
-            $concluded = $this->forwardGet($property);
+        $concluded = $this->forwardGet($property);
 
-            $this->registerConcludedInteraction($concluded);
+        $this->logInteraction($concluded);
 
-            return $this->decorateIfIsObject(
-                $concluded->getResult()
-            );
-        });
+        return $this->decorateIfIsObject(
+            $concluded->getResult()
+        );
     }
 
     /**
-     * Intercepts attempts to set a property value of the target.
-     * Forwards the interaction to the forwarder and registers the interaction.
+     * Intercept attempts to set a property value of the target.
+     * Forwards the interaction to the forwarder and log the interaction.
      *
      * @param string $property
      * @param mixed $value
@@ -106,11 +99,9 @@ class Proxy
      */
     public function __set(string $property, mixed $value): void
     {
-        $this->try(function () use ($property, $value) {
-            $concluded = $this->forwardSet($property, $value);
+        $concluded = $this->forwardSet($property, $value);
 
-            $this->registerConcludedInteraction($concluded);
-        });
+        $this->logInteraction($concluded);
     }
 
     /**
@@ -149,24 +140,6 @@ class Proxy
     }
 
     /**
-     * Attempt to run the given action.
-     * Pass exceptions to the exception handler when thrown
-     *
-     * @param Closure $action
-     * @return mixed
-     */
-    protected function try(Closure $action): mixed
-    {
-        try {
-            return $action();
-        } catch (Exception $exception) {
-            return $this->exceptionHandler->handle(
-                new FailedAction($exception, $action, $this)
-            );
-        }
-    }
-
-    /**
      * Decorate the given value if value is an object
      *
      * @param mixed $value
@@ -189,16 +162,22 @@ class Proxy
      */
     protected function decorateObject(object $object): Proxy
     {
-        return (clone $this)->setTarget($object);
+        $decorated = (new static($object));
+
+        $decorated->forwarder = $this->forwarder;
+
+        $decorated->parent = $this;
+
+        return $decorated;
     }
 
     /**
-     * Register a concluded interaction
+     * Log a concluded interaction
      *
      * @param ConcludedInteraction $concluded
      * @return void
      */
-    protected function registerConcludedInteraction(ConcludedInteraction $concluded): void
+    protected function logInteraction(ConcludedInteraction $concluded): void
     {
         $this->concludedInteractions[] = $concluded;
     }
@@ -217,11 +196,19 @@ class Proxy
      * @param object $target
      * @return $this
      */
-    public function setTarget(object $target): Proxy
+    public function setTarget(object $target): static
     {
         $this->target = $target;
 
         return $this;
+    }
+
+    /**
+     * @return Proxy|null
+     */
+    public function getParent(): ?Proxy
+    {
+        return $this->parent;
     }
 
     /**
@@ -236,28 +223,9 @@ class Proxy
      * @param Forwarder $forwarder
      * @return $this
      */
-    public function setForwarder(Forwarder $forwarder): Proxy
+    public function setForwarder(Forwarder $forwarder): static
     {
         $this->forwarder = $forwarder;
-
-        return $this;
-    }
-
-    /**
-     * @return ExceptionHandler
-     */
-    public function getExceptionHandler(): ExceptionHandler
-    {
-        return $this->exceptionHandler;
-    }
-
-    /**
-     * @param ExceptionHandler $exceptionHandler
-     * @return $this
-     */
-    public function setExceptionHandler(ExceptionHandler $exceptionHandler): Proxy
-    {
-        $this->exceptionHandler = $exceptionHandler;
 
         return $this;
     }

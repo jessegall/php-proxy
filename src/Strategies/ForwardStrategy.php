@@ -2,6 +2,7 @@
 
 namespace JesseGall\Proxy\Strategies;
 
+use JesseGall\Proxy\Contracts\HasResult;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\Status;
 
@@ -25,18 +26,11 @@ abstract class ForwardStrategy
     }
 
     /**
-     * Execute the strategy.
-     * Set interaction status to fulfilled
-     *
-     * @return mixed
+     * Execute the strategy and return result
      */
     public function execute()
     {
-        $result = $this->doExecute();
-
-        $this->interaction->setStatus(Status::FULFILLED);
-
-        return $result;
+        return $this->doExecute();
     }
 
     /**

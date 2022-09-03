@@ -4,30 +4,21 @@ namespace Test\TestClasses;
 
 use JesseGall\Proxy\Forwarder;
 use JesseGall\Proxy\Interactions\Interaction;
+use JesseGall\Proxy\Strategies\ForwardStrategy;
 
 class TestForwarder extends Forwarder
 {
 
-    public function forwardCall(object $target, string $method, array $parameters): mixed
+    public function newForwardStrategy(Interaction $interaction): ForwardStrategy
     {
-        return parent::forwardCall($target, $method, $parameters); 
-    }
-    
-    public function forwardGet(object $target, string $property): mixed
-    {
-        return parent::forwardGet($target, $property); 
+        return parent::newForwardStrategy($interaction);
     }
 
-    public function forwardSet(object $target, string $property, mixed $value): void
+    public function try(ForwardStrategy $strategy): mixed
     {
-        parent::forwardSet($target, $property, $value); 
+        return parent::try($strategy);
     }
-    
-    public function forwardToTarget(Interaction $interaction)
-    {
-        return parent::forwardToTarget($interaction); 
-    }
-    
+
     public function notifyInterceptors(Interaction $interaction): void
     {
         parent::notifyInterceptors($interaction); 

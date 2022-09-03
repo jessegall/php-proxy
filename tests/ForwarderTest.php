@@ -3,14 +3,19 @@
 namespace Test;
 
 use InvalidArgumentException;
+use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\ExceptionHandler;
+use JesseGall\Proxy\FailedExecution;
 use JesseGall\Proxy\Interactions\Call;
 use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\Set;
 use JesseGall\Proxy\Interactions\Status;
-use JesseGall\Proxy\InterceptorContract;
 use PHPUnit\Framework\TestCase;
+use Test\TestClasses\TestException;
 use Test\TestClasses\TestForwarder;
+use Test\TestClasses\TestForwardStrategy;
+use Test\TestClasses\TestInteraction;
 use Test\TestClasses\TestInterceptor;
 use Test\TestClasses\TestTarget;
 
@@ -56,7 +61,7 @@ class ForwarderTest extends TestCase
     {
         $forwarder = new TestForwarder();
 
-        $forwarder->setInterceptors($interceptors = [new class implements InterceptorContract {
+        $forwarder->setInterceptors($interceptors = [new class implements Intercepts {
 
             public function intercept(Interaction $interaction): void
             {
@@ -72,7 +77,7 @@ class ForwarderTest extends TestCase
     {
         $forwarder = new TestForwarder();
 
-        $forwarder->register(new class implements InterceptorContract {
+        $forwarder->registerInterceptor(new class implements Intercepts {
 
             public function intercept(Interaction $interaction): void
             {
@@ -88,9 +93,22 @@ class ForwarderTest extends TestCase
     {
         $forwarder = new TestForwarder();
 
-        $forwarder->register(TestInterceptor::class);
+        $forwarder->registerInterceptor(TestInterceptor::class);
 
         $this->assertCount(1, $forwarder->getInterceptors());
+    }
+
+    public function test_multiple_interceptors_can_be_registered_with_an_array_of_class_strings()
+    {
+        $forwarder = new TestForwarder();
+
+        $forwarder->registerInterceptor([
+            TestInterceptor::class,
+            TestInterceptor::class,
+            TestInterceptor::class,
+        ]);
+
+        $this->assertCount(3, $forwarder->getInterceptors());
     }
 
     public function test_an_exception_is_thrown_when_registering_interceptor_with_invalid_class_type()
@@ -99,14 +117,31 @@ class ForwarderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        $forwarder->register(TestTarget::class);
+        $forwarder->registerInterceptor(TestTarget::class);
+    }
+
+    public function test_when_exception_is_thrown_the_handler_is_called()
+    {
+        $forwarder = new TestForwarder();
+
+        $forwarder->setExceptionHandler($handler = $this->createMock(ExceptionHandler::class));
+
+        $strategy = new TestForwardStrategy(
+            new TestInteraction(new TestTarget(), fn() => throw new TestException())
+        );
+
+        $handler->expects($this->once())
+            ->method('handle')
+            ->with(new FailedExecution($strategy, new TestException()));
+
+        $forwarder->try($strategy);
     }
 
     public function test_when_interceptor_sets_interaction_to_fulfilled_the_interaction_does_not_forward_to_target()
     {
         $forwarder = $this->createMock(TestForwarder::class);
 
-        $forwarder->register(new class implements InterceptorContract {
+        $forwarder->registerInterceptor(new class implements Intercepts {
 
             public function intercept(Interaction $interaction): void
             {
@@ -117,14 +152,14 @@ class ForwarderTest extends TestCase
 
         $forwarder->forward(new Get(new TestTarget(), 'get'));
 
-        $forwarder->expects($this->never())->method('forwardToTarget');
+        $forwarder->expects($this->never())->method('newForwardStrategy');
     }
 
     public function test_when_interceptor_sets_interaction_to_cancelled_the_interaction_does_not_forward_to_target()
     {
         $forwarder = $this->createMock(TestForwarder::class);
 
-        $forwarder->register(new class implements InterceptorContract {
+        $forwarder->registerInterceptor(new class implements Intercepts {
 
             public function intercept(Interaction $interaction): void
             {
@@ -135,14 +170,14 @@ class ForwarderTest extends TestCase
 
         $forwarder->forward(new Get(new TestTarget(), 'get'));
 
-        $forwarder->expects($this->never())->method('forwardToTarget');
+        $forwarder->expects($this->never())->method('newForwardStrategy');
     }
 
     public function test_when_interceptor_sets_status_to_fulfilled_and_sets_result_the_expected_value_is_returned()
     {
         $forwarder = new TestForwarder();
 
-        $forwarder->register(new class implements InterceptorContract {
+        $forwarder->registerInterceptor(new class implements Intercepts {
 
             public function intercept(Interaction $interaction): void
             {
