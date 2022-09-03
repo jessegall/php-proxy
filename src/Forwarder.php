@@ -3,7 +3,7 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Interactions\Call;
-use JesseGall\Proxy\Interactions\Contract\ReturnsResultContract;
+use JesseGall\Proxy\Interactions\Contract\ReturnResultContract;
 use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\Set;
@@ -17,6 +17,11 @@ class Forwarder
      */
     protected array $interceptors = [];
 
+    public function addInterceptor(InterceptorContract $interceptor): void
+    {
+        $this->interceptors[] = $interceptor;
+    }
+
     public function forward(Interaction $interaction): ConcludedInteraction
     {
         $this->notifyInterceptors($interaction);
@@ -27,12 +32,13 @@ class Forwarder
 
         $result = $this->forwardToTarget($interaction);
 
-        if ($interaction instanceof ReturnsResultContract) {
+        if ($interaction instanceof ReturnResultContract) {
             $interaction->setResult($result);
         }
 
         return new ConcludedInteraction($interaction);
     }
+
 
     protected function notifyInterceptors(Interaction $interaction): void
     {
@@ -41,7 +47,7 @@ class Forwarder
         }
     }
 
-    protected function forwardToTarget(Interaction $interaction): mixed
+    protected function forwardToTarget(Interaction $interaction)
     {
         if ($interaction instanceof Call) {
             return $this->forwardCall(
@@ -77,19 +83,12 @@ class Forwarder
         return $target->{$property};
     }
 
-    protected function forwardSet(object $target, string $property, mixed $value): mixed
+    protected function forwardSet(object $target, string $property, mixed $value): void
     {
-        return $target->{$property} = $value;
+        $target->{$property} = $value;
     }
 
-    /*
-     * Getters and setters
-     */
-
-    public function addInterceptor(InterceptorContract $interceptor): void
-    {
-        $this->addInterceptor($interceptor);
-    }
+    # --- Getters and Setters ---
 
     public function getInterceptors(): array
     {

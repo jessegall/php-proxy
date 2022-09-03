@@ -2,7 +2,7 @@
 
 namespace JesseGall\Proxy\Interactions\Contract;
 
-interface ReturnsResultContract
+interface ReturnResultContract
 {
 
     public function getResult(): mixed;

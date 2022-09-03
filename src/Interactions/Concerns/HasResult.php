@@ -2,13 +2,19 @@
 
 namespace JesseGall\Proxy\Interactions\Concerns;
 
-trait HasResults
+use JesseGall\Proxy\Interactions\Status;
+
+trait HasResult
 {
 
-    protected mixed $result;
+    protected mixed $result = null;
 
     public function getResult(): mixed
     {
+        if (! $this->hasStatus(Status::FULFILLED)) {
+            return null;
+        }
+
         return $this->result;
     }
 

@@ -2,83 +2,35 @@
 
 namespace Test\TestClasses;
 
-use JesseGall\Proxy\ConcludedInteraction;
 use JesseGall\Proxy\Forwarder;
 use JesseGall\Proxy\Interactions\Interaction;
-use JesseGall\Proxy\Interactions\Status;
-use JesseGall\Proxy\InterceptorContract;
-use Test\Concerns\LogsMethodCalls;
 
 class TestForwarder extends Forwarder
 {
-    use LogsMethodCalls;
 
-    public function forward(Interaction $interaction): ConcludedInteraction
+    public function forwardCall(object $target, string $method, array $parameters): mixed
     {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return new ConcludedInteraction($interaction->setStatus(Status::FULFILLED));
+        return parent::forwardCall($target, $method, $parameters); 
+    }
+    
+    public function forwardGet(object $target, string $property): mixed
+    {
+        return parent::forwardGet($target, $property); 
     }
 
-    protected function forwardToTarget(Interaction $interaction): mixed
+    public function forwardSet(object $target, string $property, mixed $value): void
     {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return parent::forwardToTarget($interaction);
+        parent::forwardSet($target, $property, $value); 
     }
-
-    protected function forwardCall(object $target, string $method, array $parameters): mixed
+    
+    public function forwardToTarget(Interaction $interaction)
     {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return parent::forwardCall($target, $method, $parameters);
+        return parent::forwardToTarget($interaction); 
     }
-
-    protected function forwardGet(object $target, string $property): mixed
+    
+    public function notifyInterceptors(Interaction $interaction): void
     {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return parent::forwardGet($target, $property);
-    }
-
-    protected function forwardSet(object $target, string $property, mixed $value): mixed
-    {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return parent::forwardSet($target, $property, $value);
-    }
-
-    public function addInterceptor(InterceptorContract $interceptor): void
-    {
-        $this->logMethodCall(__FUNCTION__);
-
-        parent::addInterceptor($interceptor);
-    }
-
-    public function getInterceptors(): array
-    {
-        if ($result = $this->logMethodCall(__FUNCTION__)) {
-            return $result;
-        }
-
-        return parent::getInterceptors();
-    }
-
-    public function setInterceptors(array $interceptors): Forwarder
-    {
-        $this->logMethodCall(__FUNCTION__);
-
-        return parent::setInterceptors($interceptors);
+        parent::notifyInterceptors($interaction); 
     }
 
 }

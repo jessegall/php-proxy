@@ -2,12 +2,12 @@
 
 namespace JesseGall\Proxy\Interactions;
 
-use JesseGall\Proxy\Interactions\Concerns\HasResults;
-use JesseGall\Proxy\Interactions\Contract\ReturnsResultContract;
+use JesseGall\Proxy\Interactions\Concerns\HasResult;
+use JesseGall\Proxy\Interactions\Contract\ReturnResultContract;
 
-class Get extends Interaction implements ReturnsResultContract
+class Get extends Interaction implements ReturnResultContract
 {
-    use HasResults;
+    use HasResult;
 
     protected string $property;
 

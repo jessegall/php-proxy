@@ -12,11 +12,11 @@ class TestTarget
     public string $get = 'expected';
     public string $set = 'initial';
 
-    public function call(Closure $closure = null)
+    public function call(...$args)
     {
         $this->logMethodCall(__FUNCTION__);
 
-        if ($closure) {
+        if (($closure = $args[0] ?? null) && $closure instanceof Closure) {
             return ($closure)();
         }
 

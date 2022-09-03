@@ -95,7 +95,7 @@ class ProxyTest extends TestCase
             protected function forwardCall(string $method, array $parameters): ConcludedInteraction
             {
                 return new ConcludedInteraction(
-                    (new Call($this->target, 'call', []))->setResult(new \stdClass())
+                    (new Call($this->target, 'call', []))->setResult(new \stdClass())->setStatus(Status::FULFILLED)
                 );
             }
 

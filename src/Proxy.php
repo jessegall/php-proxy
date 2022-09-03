@@ -36,6 +36,8 @@ class Proxy
     protected ExceptionHandler $exceptionHandler;
 
     /**
+     * A list of concluded interactions
+     *
      * @var ConcludedInteraction[]
      */
     protected array $concludedInteractions;
