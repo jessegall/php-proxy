@@ -2,37 +2,56 @@
 
 namespace Test;
 
-use Exception;
-use JesseGall\Proxy\Forwarders\CallForwarder;
-use JesseGall\Proxy\Forwarders\GetForwarder;
-use JesseGall\Proxy\Handlers\Catcher;
+use JesseGall\Proxy\ConcludedInteraction;
+use JesseGall\Proxy\ExceptionHandler;
+use JesseGall\Proxy\FailedAction;
+use JesseGall\Proxy\Forwarder;
+use JesseGall\Proxy\Interactions\Call;
+use JesseGall\Proxy\Interactions\Get;
+use JesseGall\Proxy\Interactions\Set;
+use JesseGall\Proxy\Interactions\Status;
 use JesseGall\Proxy\Proxy;
 use PHPUnit\Framework\TestCase;
-use stdClass;
+use Test\TestClasses\TestException;
+use Test\TestClasses\TestTarget;
 
 class ProxyTest extends TestCase
 {
 
-    public function test_expected_value_is_returned_on_call()
+
+    public function test_call_is_forwarded_to_forwarder_and_expected_value_is_returned()
     {
-        $proxy = new Proxy(new class {
-            public function test()
-            {
-                return 'expected';
-            }
-        });
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setForwarder($forwarder = $this->createMock(Forwarder::class));
+
+        $forwarder->expects($this->once())
+            ->method('forward')
+            ->willReturn(new ConcludedInteraction(
+                (new Call($proxy->getTarget(), 'call', []))
+                    ->setStatus(Status::FULFILLED)
+                    ->setResult('expected')
+            ));
 
         $this->assertEquals(
             'expected',
-            $proxy->test()
+            $proxy->call()
         );
     }
 
-    public function test_expected_value_is_returned_on_get()
+    public function test_get_is_forwarded_to_forwarder_and_expected_value_is_returned()
     {
-        $proxy = new Proxy(new class {
-            public string $test = 'expected';
-        });
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setForwarder($forwarder = $this->createMock(Forwarder::class));
+
+        $forwarder->expects($this->once())
+            ->method('forward')
+            ->willReturn(new ConcludedInteraction(
+                (new Get($proxy->getTarget(), 'get'))
+                    ->setStatus(Status::FULFILLED)
+                    ->setResult('expected')
+            ));
 
         $this->assertEquals(
             'expected',
@@ -40,135 +59,127 @@ class ProxyTest extends TestCase
         );
     }
 
-    public function test_call_interceptor_handler_is_called()
+    public function test_set_is_forwarded_to_forwarder_and_expected_value_is_returned()
     {
-        $proxy = new Proxy(new class {
-            public function test()
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setForwarder($forwarder = $this->createMock(Forwarder::class));
+
+        $forwarder->expects($this->once())
+            ->method('forward')
+            ->willReturn(new ConcludedInteraction(
+                (new Set($proxy->getTarget(), 'set', 'new value'))
+                    ->setStatus(Status::FULFILLED)
+            ));
+
+        $proxy->set = 'new value';
+    }
+
+    public function test_when_exception_is_thrown_the_handler_is_called()
+    {
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setExceptionHandler($handler = $this->createMock(ExceptionHandler::class));
+
+        $handler->expects($this->once())
+            ->method('handle')
+            ->with(new FailedAction(new TestException(), fn() => 0, $proxy));
+
+        $proxy->call(fn() => throw new TestException());
+    }
+
+    public function test_result_is_decorated_when_value_is_an_object()
+    {
+        $proxy = new class(new TestTarget()) extends Proxy {
+
+            protected function forwardCall(string $method, array $parameters): ConcludedInteraction
             {
-                return 'invalid';
+                return new ConcludedInteraction(
+                    (new Call($this->target, 'call', []))->setResult(new \stdClass())
+                );
             }
-        });
 
-        $proxy->getCallForwarder()->getInterceptor()->setHandler(
-            function () use (&$called) {
-                $called++;
-            }
-        );
+        };
 
-        $proxy->test();
+        $result = $proxy->call(fn() => new \stdClass());
 
-        $this->assertEquals(
-            1,
-            $called
+        $this->assertInstanceOf(
+            Proxy::class,
+            $result,
         );
     }
 
-    public function test_call_interceptor_handler_is_called_with_correct_arguments()
+    public function test_cloned_proxy_is_equal_except_for_target()
     {
-        $proxy = new Proxy($target = new class {
-            public function test(): void
+        $proxy = new class(new TestTarget()) extends Proxy {
+            public function decorateObject(object $object): Proxy
             {
-                //
-            }
-        });
-
-        $actual = [
-            'target' => null,
-            'method' => null,
-            'parameters' => null,
-        ];
-
-        $proxy->getCallForwarder()->getInterceptor()->setHandler(
-            function ($target, $method, $parameters) use (&$actual) {
-                $actual['target'] = $target;
-                $actual['method'] = $method;
-                $actual['parameters'] = $parameters;
-            }
-        );
-
-        $proxy->test('expected_one', 'expected_two');
-
-        $this->assertEquals($target, $actual['target']);
-        $this->assertEquals('test', $actual['method']);
-        $this->assertEquals(['expected_one', 'expected_two'], $actual['parameters']);
-    }
-
-    public function test_get_interceptor_handler_is_called()
-    {
-        $proxy = new Proxy(new class {
-            public string $test = 'test';
-        });
-
-        $proxy->getGetForwarder()->getInterceptor()->setHandler(
-            function () use (&$called) {
-                $called++;
-            }
-        );
-
-        $value = $proxy->test;
-
-        $this->assertEquals(
-            1,
-            $called
-        );
-    }
-
-    public function test_value_is_wrapped_in_proxy_when_value_is_object()
-    {
-        $proxy = new Proxy(new class {
-            public function test(): object
-            {
-                return new stdClass();
-            }
-        });
-
-        $this->assertInstanceOf(Proxy::class, $proxy->test());
-    }
-
-    public function test_when_value_is_wrapped_the_proxy_is_correctly_cloned()
-    {
-        $proxy = new class extends Proxy {
-
-            public function __construct()
-            {
-                parent::__construct(new stdClass());
-            }
-
-            public function decorateObject(object $value): Proxy
-            {
-                return parent::decorateObject($value);
+                return parent::decorateObject($object);
             }
         };
 
-        $proxy->setCallForwarder($callForwarder = new CallForwarder());
-        $proxy->setGetForwarder($getForwarder = new GetForwarder());
-        $proxy->setCatcher($catcher = new Catcher());
+        $clone = $proxy->decorateObject(new \stdClass());
 
-        $clone = $proxy->decorateObject($target = new stdClass());
+        $proxy->setTarget($clone->getTarget()); // To make the target equal
 
-        $this->assertEquals(get_class($proxy), get_class($clone));
-        $this->assertEquals($callForwarder, $proxy->getCallForwarder());
-        $this->assertEquals($getForwarder, $proxy->getGetForwarder());
-        $this->assertEquals($catcher, $proxy->getCatcher());
-        $this->assertEquals($target, $clone->getTarget());
+        $this->assertEquals($proxy, $clone);
     }
 
-    public function test_catcher_handler_is_called_when_exception_is_thrown()
+    public function test_interaction_is_registered_when_concluded()
     {
-        $proxy = new Proxy(new class {
-            public function test()
+        $proxy = new class(new TestTarget()) extends Proxy {
+            protected function forwardCall(string $method, array $parameters): ConcludedInteraction
             {
-                throw new Exception();
+                return new ConcludedInteraction(
+                    (new Call($this->target, 'call', []))->setResult(new \stdClass())
+                );
             }
-        });
 
-        $proxy->setCatcher(function () use(&$called) {
-            $called++;
-        });
+            protected function forwardGet(string $property): ConcludedInteraction
+            {
+                return new ConcludedInteraction(
+                    (new Get($this->target, 'get'))->setResult(new \stdClass())
+                );
+            }
 
-        $proxy->test();
+            protected function forwardSet(string $property, mixed $value): ConcludedInteraction
+            {
+                return new ConcludedInteraction(
+                    (new Set($this->target, 'set', $value))
+                );
+            }
+        };
 
-        $this->assertEquals(1, $called);
+        $proxy->call();
+        $proxy->set = 'new value';
+        $proxy->get;
+
+        $this->assertCount(3, $proxy->getConcludedInteractions());
+    }
+
+    public function test_get_exception_handler_returns_expected_value()
+    {
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setExceptionHandler($handler = new ExceptionHandler());
+
+        $this->assertEquals($handler, $proxy->getExceptionHandler());
+    }
+
+    public function test_get_target_returns_expected_value()
+    {
+        $proxy = new Proxy($target = new TestTarget());
+
+        $this->assertEquals($target, $proxy->getTarget());
+    }
+
+    public function test_get_forwarder_returns_expected_value()
+    {
+        $proxy = new Proxy(new TestTarget());
+
+        $proxy->setForwarder($forwarder = new Forwarder());
+
+        $this->assertEquals($forwarder, $proxy->getForwarder());
     }
 
 }
