@@ -70,7 +70,7 @@ class Proxy
             $this->registerConcludedInteraction($concluded);
 
             return $this->decorateIfIsObject(
-                $concluded->getInteraction()->getResult()
+                $concluded->getResult()
             );
         });
     }
@@ -91,7 +91,7 @@ class Proxy
             $this->registerConcludedInteraction($concluded);
 
             return $this->decorateIfIsObject(
-                $concluded->getInteraction()->getResult()
+                $concluded->getResult()
             );
         });
     }

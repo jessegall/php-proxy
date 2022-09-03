@@ -36,10 +36,7 @@ class ForwarderTest extends TestCase
 
         $target = new TestTarget();
 
-        $actual = $forwarder->forward(new Get($target, 'get'))
-            ->getInteraction()
-            ->setStatus(Status::FULFILLED)
-            ->getResult();
+        $actual = $forwarder->forward(new Get($target, 'get'))->getResult();
 
         $this->assertEquals('expected', $actual);
     }
@@ -158,7 +155,7 @@ class ForwarderTest extends TestCase
 
         $this->assertEquals(
             'expected',
-            $concluded->getInteraction()->getResult()
+            $concluded->getResult()
         );
     }
 
@@ -173,9 +170,9 @@ class ForwarderTest extends TestCase
             }
         }, 'empty', []));
 
-        $this->assertTrue($concluded->getInteraction()->hasStatus(Status::FULFILLED));
+        $this->assertTrue($concluded->hasStatus(Status::FULFILLED));
 
-        $this->assertNull($concluded->getInteraction()->getResult());
+        $this->assertNull($concluded->getResult());
     }
 
     public function test_concluded_interaction_has_correct_timestamp()

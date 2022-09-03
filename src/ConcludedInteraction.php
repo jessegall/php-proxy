@@ -2,7 +2,9 @@
 
 namespace JesseGall\Proxy;
 
+use JesseGall\Proxy\Interactions\Contract\ReturnResultContract;
 use JesseGall\Proxy\Interactions\Interaction;
+use JesseGall\Proxy\Interactions\Status;
 
 /**
  * @template T of Interaction
@@ -13,7 +15,7 @@ class ConcludedInteraction
     /**
      * The concluded interaction
      *
-     * @var Interaction|mixed
+     * @var T
      */
     protected readonly Interaction $interaction;
 
@@ -34,19 +36,49 @@ class ConcludedInteraction
     }
 
     /**
-     * @return T
-     */
-    public function getInteraction(): Interaction
-    {
-        return $this->interaction;
-    }
-
-    /**
      * @return float
      */
     public function getTimestamp(): float
     {
         return $this->timestamp;
     }
+
+    /**
+     * @return T
+     */
+    public function getTarget(): object
+    {
+        return $this->interaction->getTarget();
+    }
+
+    /**
+     * @return Status
+     */
+    public function getStatus(): Status
+    {
+        return $this->interaction->getStatus();
+    }
+
+    /**
+     * @param Status $status
+     * @return bool
+     */
+    public function hasStatus(Status $status): bool
+    {
+        return $this->interaction->hasStatus($status);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResult(): mixed
+    {
+        if ($this->interaction instanceof ReturnResultContract) {
+            return $this->interaction->getResult();
+        }
+
+        return null;
+    }
+
 
 }
