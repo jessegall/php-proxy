@@ -2,10 +2,10 @@
 
 namespace JesseGall\Proxy;
 
-use Closure;
 use Exception;
 use JesseGall\Proxy\Contracts\HasResult;
 use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\Call;
 use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Interaction;
@@ -84,24 +84,33 @@ class Forwarder
     {
         $this->notifyInterceptors($interaction);
 
+        // Interceptors might change the status of the interaction.
+        // That's why we check if the status is still pending after the interceptors are notified.
+        // In case the interaction no longer has status pending, we skip the forwarding and return.
         if (! $interaction->hasStatus(Status::PENDING)) {
             return new ConcludedInteraction($interaction);
         }
 
-        $result = $this->newForwardStrategy($interaction)->execute();
+        try {
+            $strategy = $this->newForwardStrategy($interaction);
 
-        if ($interaction instanceof HasResult) {
-            $interaction->setResult($result);
+            $result = $this->try($strategy);
+
+            if ($interaction instanceof HasResult) {
+                $interaction->setResult($result);
+            }
+
+            $interaction->setStatus(Status::FULFILLED);
+        } catch (ForwardStrategyMissingException) {
+            $interaction->setStatus(Status::UNPROCESSABLE);
         }
-
-        $interaction->setStatus(Status::FULFILLED);
 
         return new ConcludedInteraction($interaction);
     }
 
     /**
      * Attempt to execute the given strategy.
-     * Forwards exceptions to exception handler.
+     * Forwards any exceptions to exception handler.
      *
      * @param ForwardStrategy $strategy
      * @return mixed
@@ -122,10 +131,11 @@ class Forwarder
      *
      * @param Interaction $interaction
      * @return ForwardStrategy
+     * @throws ForwardStrategyMissingException
      */
     protected function newForwardStrategy(Interaction $interaction): ForwardStrategy
     {
-        $type = $this->strategies[$interaction::class];
+        $type = $this->strategies[$interaction::class] ?? throw new ForwardStrategyMissingException($interaction);
 
         return new $type($interaction);
     }

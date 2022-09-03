@@ -18,8 +18,7 @@ enum Status
 
     /**
      * Interaction failed.
-     * In case an exception is thrown while executing,
-     * the exception handler will mark the interaction as failed
+     * The exception handler will mark the interaction as failed when an exception is thrown while executing.
      */
     case FAILED;
 
@@ -28,4 +27,10 @@ enum Status
      * An interaction can be marked cancelled by interceptors to cancel the execution.
      */
     case CANCELLED;
+
+    /**
+     * Interaction was not able to start executing due to an issue.
+     * The forwarder will mark the interaction as unprocessable when no forward strategy is found for the interaction.
+     */
+    case UNPROCESSABLE;
 }
