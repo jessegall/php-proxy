@@ -2,8 +2,6 @@
 
 namespace JesseGall\Proxy;
 
-use Closure;
-use Exception;
 use JesseGall\Proxy\Interactions\Call;
 use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Set;
@@ -162,7 +160,7 @@ class Proxy
      */
     protected function decorateObject(object $object): Proxy
     {
-        $decorated = (new static($object));
+        $decorated = new static($object);
 
         $decorated->forwarder = $this->forwarder;
 

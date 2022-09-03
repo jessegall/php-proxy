@@ -86,7 +86,7 @@ class Forwarder
 
         // Interceptors might change the status of the interaction.
         // That's why we check if the status is still pending after the interceptors are notified.
-        // In case the interaction no longer has status pending, we skip the forwarding and return.
+        // In the case that the interaction no longer has status pending, we skip the forwarding and return.
         if (! $interaction->hasStatus(Status::PENDING)) {
             return new ConcludedInteraction($interaction);
         }
@@ -110,7 +110,7 @@ class Forwarder
 
     /**
      * Attempt to execute the given strategy.
-     * Forwards any exceptions to exception handler.
+     * Forwards any thrown exceptions to the exception handler.
      *
      * @param ForwardStrategy $strategy
      * @return mixed

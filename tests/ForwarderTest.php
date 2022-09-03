@@ -11,6 +11,7 @@ use JesseGall\Proxy\Interactions\Get;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\Set;
 use JesseGall\Proxy\Interactions\Status;
+use JesseGall\Proxy\Strategies\ForwardCall;
 use PHPUnit\Framework\TestCase;
 use Test\TestClasses\TestException;
 use Test\TestClasses\TestForwarder;
@@ -220,6 +221,34 @@ class ForwarderTest extends TestCase
             round(microtime(true)),
             round($concluded->getTimestamp()),
         );
+    }
+
+    public function test_setting_a_strategy_can_be_used_to_modify_the_result_of_an_interaction()
+    {
+        $forwarder = new TestForwarder();
+
+        $forwarder->setStrategy(Call::class, ForwardCallValueChanger::class);
+
+        $interaction = new Call(new TestTarget(), 'call', []);
+
+        $concluded = $forwarder->forward($interaction);
+
+        $this->assertEquals(
+            'expected_expected',
+            $concluded->getResult()
+        );
+    }
+
+}
+
+class ForwardCallValueChanger extends ForwardCall
+{
+
+    public function doExecute(): mixed
+    {
+        $result = parent::doExecute();
+
+        return $result . '_' . $result;
     }
 
 }
