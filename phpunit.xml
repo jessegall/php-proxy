@@ -9,7 +9,6 @@
          beStrictAboutOutputDuringTests="true"
          beStrictAboutTodoAnnotatedTests="true"
          convertDeprecationsToExceptions="true"
-         processUncoveredFiles="false"
          failOnRisky="true"
          failOnWarning="true"
          verbose="true">

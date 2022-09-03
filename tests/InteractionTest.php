@@ -54,4 +54,26 @@ class InteractionTest extends TestCase
         );
     }
 
+    public function test_set_and_get_target_change_and_return_expected_value()
+    {
+        $interaction = new class(new TestTarget()) extends Interaction {
+
+        };
+
+        $interaction->setTarget($expected = new \stdClass());
+
+        $this->assertEquals($expected, $interaction->getTarget());
+    }
+
+    public function test_set_and_get_status_change_and_return_expected_value()
+    {
+        $interaction = new class(new TestTarget()) extends Interaction {
+
+        };
+
+        $interaction->setStatus($expected = Status::FAILED);
+
+        $this->assertEquals($expected, $interaction->getStatus());
+    }
+
 }
