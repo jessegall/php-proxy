@@ -1,9 +1,9 @@
 <?php
 
-namespace JesseGall\Proxy\Implementations\Handlers;
+namespace JesseGall\Proxy\Implementation\Handlers;
 
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
-use JesseGall\Proxy\Implementations\Handlers\Exceptions\MaxAttemptsExceededException;
+use JesseGall\Proxy\Implementation\Handlers\Exceptions\MaxAttemptsExceededException;
 use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 
 class Repeater implements HandlesFailedStrategies

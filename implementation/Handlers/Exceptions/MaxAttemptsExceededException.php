@@ -1,6 +1,6 @@
 <?php
 
-namespace JesseGall\Proxy\Implementations\Handlers\Exceptions;
+namespace JesseGall\Proxy\Implementation\Handlers\Exceptions;
 
 use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 

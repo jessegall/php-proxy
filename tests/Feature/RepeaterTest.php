@@ -2,8 +2,8 @@
 
 namespace Test\Feature;
 
-use JesseGall\Proxy\Implementations\Handlers\Exceptions\MaxAttemptsExceededException;
-use JesseGall\Proxy\Implementations\Handlers\Repeater;
+use JesseGall\Proxy\Implementation\Handlers\Exceptions\MaxAttemptsExceededException;
+use JesseGall\Proxy\Implementation\Handlers\Repeater;
 use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Strategies\ForwardStrategy;
 use PHPUnit\Framework\TestCase;

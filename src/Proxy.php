@@ -5,6 +5,7 @@ namespace JesseGall\Proxy;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\GetInteraction;
+use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\SetInteraction;
 
 /**
@@ -64,9 +65,9 @@ class Proxy
      */
     public function __call(string $method, array $parameters): mixed
     {
-        $concluded = $this->forwardCall($method, $parameters);
-
-        $this->logInteraction($concluded);
+        $concluded = $this->forwardAndLog(
+            new CallInteraction($this->target, $method, $parameters)
+        );
 
         return $this->decorateIfIsObject(
             $concluded->getResult()
@@ -84,9 +85,9 @@ class Proxy
      */
     public function __get(string $property): mixed
     {
-        $concluded = $this->forwardGet($property);
-
-        $this->logInteraction($concluded);
+        $concluded = $this->forwardAndLog(
+            new GetInteraction($this->target, $property)
+        );
 
         return $this->decorateIfIsObject(
             $concluded->getResult()
@@ -104,47 +105,25 @@ class Proxy
      */
     public function __set(string $property, mixed $value): void
     {
-        $concluded = $this->forwardSet($property, $value);
+        $this->forwardAndLog(
+            new SetInteraction($this->target, $property, $value)
+        );
+    }
+
+    /**
+     * Forward the interaction to the forwarder and log the result
+     *
+     * @param Interaction $interaction
+     * @return ConcludedInteraction
+     * @throws ForwardStrategyMissingException
+     */
+    protected function forwardAndLog(Interaction $interaction): ConcludedInteraction
+    {
+        $concluded = $this->forwarder->forward($interaction);
 
         $this->logInteraction($concluded);
-    }
 
-    /**
-     * Forward a method call to the target using the forwarder.
-     *
-     * @param string $method
-     * @param array $parameters
-     * @return ConcludedInteraction<CallInteraction>
-     * @throws ForwardStrategyMissingException
-     */
-    protected function forwardCall(string $method, array $parameters): ConcludedInteraction
-    {
-        return $this->forwarder->forward(new CallInteraction($this->target, $method, $parameters));
-    }
-
-    /**
-     * Forward accessing a property of the target using the forwarder.
-     *
-     * @param string $property
-     * @return ConcludedInteraction<GetInteraction>
-     * @throws ForwardStrategyMissingException
-     */
-    protected function forwardGet(string $property): ConcludedInteraction
-    {
-        return $this->forwarder->forward(new GetInteraction($this->target, $property));
-    }
-
-    /**
-     * Forward setting a property of the target using the forwarder.
-     *
-     * @param string $property
-     * @param mixed $value
-     * @return ConcludedInteraction<SetInteraction>
-     * @throws ForwardStrategyMissingException
-     */
-    protected function forwardSet(string $property, mixed $value): ConcludedInteraction
-    {
-        return $this->forwarder->forward(new SetInteraction($this->target, $property, $value));
+        return $concluded;
     }
 
     /**
@@ -217,6 +196,17 @@ class Proxy
     public function getParent(): ?Proxy
     {
         return $this->parent;
+    }
+
+    /**
+     * @param Proxy|null $parent
+     * @return Proxy
+     */
+    public function setParent(?Proxy $parent): static
+    {
+        $this->parent = $parent;
+
+        return $this;
     }
 
     /**
