@@ -2,15 +2,15 @@
 
 namespace JesseGall\Proxy;
 
-use Exception;
-use JesseGall\Proxy\Contracts\HasResult;
 use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
-use JesseGall\Proxy\Interactions\Call;
-use JesseGall\Proxy\Interactions\Get;
+use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
+use JesseGall\Proxy\Interactions\GetInteraction;
 use JesseGall\Proxy\Interactions\Interaction;
-use JesseGall\Proxy\Interactions\Set;
+use JesseGall\Proxy\Interactions\SetInteraction;
 use JesseGall\Proxy\Interactions\Status;
+use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Strategies\ForwardCall;
 use JesseGall\Proxy\Strategies\ForwardGet;
 use JesseGall\Proxy\Strategies\ForwardSet;
@@ -25,9 +25,9 @@ class Forwarder
      * @var array<class-string<Interaction>, class-string<ForwardStrategy>>
      */
     protected array $strategies = [
-        Call::class => ForwardCall::class,
-        Get::class => ForwardGet::class,
-        Set::class => ForwardSet::class,
+        CallInteraction::class => ForwardCall::class,
+        GetInteraction::class => ForwardGet::class,
+        SetInteraction::class => ForwardSet::class,
     ];
 
     /**
@@ -79,6 +79,7 @@ class Forwarder
      *
      * @param Interaction $interaction
      * @return ConcludedInteraction
+     * @throws ForwardStrategyMissingException
      */
     public function forward(Interaction $interaction): ConcludedInteraction
     {
@@ -91,38 +92,31 @@ class Forwarder
             return new ConcludedInteraction($interaction);
         }
 
-        try {
-            $strategy = $this->newForwardStrategy($interaction);
+        $strategy = $this->newForwardStrategy($interaction);
 
-            $result = $this->try($strategy);
+        $this->tryExecuting($strategy);
 
-            if ($interaction instanceof HasResult) {
-                $interaction->setResult($result);
-            }
-
-            $interaction->setStatus(Status::FULFILLED);
-        } catch (ForwardStrategyMissingException) {
-            $interaction->setStatus(Status::UNPROCESSABLE);
+        if ($interaction instanceof InteractsAndReturnsResult) {
+            $interaction->setResult($strategy->getResult());
         }
+
+        $interaction->setStatus(Status::FULFILLED);
 
         return new ConcludedInteraction($interaction);
     }
 
     /**
-     * Attempt to execute the given strategy.
+     * Try to execute the given strategy.
      * Forwards any thrown exceptions to the exception handler.
      *
      * @param ForwardStrategy $strategy
-     * @return mixed
      */
-    protected function try(ForwardStrategy $strategy): mixed
+    protected function tryExecuting(ForwardStrategy $strategy): void
     {
         try {
-            return $strategy->execute();
-        } catch (Exception $exception) {
-            return $this->exceptionHandler->handle(
-                new FailedExecution($strategy, $exception)
-            );
+            $strategy->execute();
+        } catch (ExecutionException $exception) {
+            $this->exceptionHandler->handle($exception);
         }
     }
 

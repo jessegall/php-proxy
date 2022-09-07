@@ -14,14 +14,14 @@ class TestForwarder extends Forwarder
         return parent::newForwardStrategy($interaction);
     }
 
-    public function try(ForwardStrategy $strategy): mixed
+    public function tryExecuting(ForwardStrategy $strategy): void
     {
-        return parent::try($strategy);
+        parent::tryExecuting($strategy);
     }
 
     public function notifyInterceptors(Interaction $interaction): void
     {
-        parent::notifyInterceptors($interaction); 
+        parent::notifyInterceptors($interaction);
     }
 
 }

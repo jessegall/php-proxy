@@ -10,12 +10,12 @@ use JesseGall\Proxy\Strategies\ForwardStrategy;
 class TestForwardStrategy extends ForwardStrategy
 {
 
-    public function __construct(TestInteraction $interaction)
+    public function __construct(TestInteraction $interaction = null)
     {
-        parent::__construct($interaction);
+        parent::__construct($interaction ?: new TestInteraction());
     }
 
-    protected function doExecute()
+    public function doExecute()
     {
         return $this->interaction->callback();
     }

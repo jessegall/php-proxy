@@ -2,8 +2,8 @@
 
 namespace JesseGall\Proxy;
 
-use JesseGall\Proxy\Contracts\HasResult;
-use JesseGall\Proxy\Interactions\Interaction;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
+use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
 use JesseGall\Proxy\Interactions\Status;
 
 /**
@@ -17,7 +17,7 @@ class ConcludedInteraction
      *
      * @var T
      */
-    protected readonly Interaction $interaction;
+    protected readonly Interacts $interaction;
 
     /**
      * The time at which the interaction was concluded
@@ -29,7 +29,7 @@ class ConcludedInteraction
     /**
      * @param T $interaction
      */
-    public function __construct(Interaction $interaction)
+    public function __construct(Interacts $interaction)
     {
         $this->interaction = $interaction;
         $this->timestamp = microtime(true);
@@ -73,7 +73,7 @@ class ConcludedInteraction
      */
     public function getResult(): mixed
     {
-        if ($this->interaction instanceof HasResult) {
+        if ($this->interaction instanceof InteractsAndReturnsResult) {
             return $this->interaction->getResult();
         }
 

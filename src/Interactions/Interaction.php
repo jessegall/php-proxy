@@ -2,7 +2,7 @@
 
 namespace JesseGall\Proxy\Interactions;
 
-use JesseGall\Proxy\Contracts\Interacts;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 
 /**
  * @template  T

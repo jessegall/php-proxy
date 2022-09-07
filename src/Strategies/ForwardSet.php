@@ -3,15 +3,15 @@
 namespace JesseGall\Proxy\Strategies;
 
 
-use JesseGall\Proxy\Interactions\Set;
+use JesseGall\Proxy\Interactions\SetInteraction;
 
 /**
- * @extends ForwardStrategy<Set>
+ * @extends ForwardStrategy<SetInteraction>
  */
 class ForwardSet extends ForwardStrategy
 {
 
-    public function doExecute(): void
+    protected function doExecute(): void
     {
         $target = $this->interaction->getTarget();
         $property = $this->interaction->getProperty();

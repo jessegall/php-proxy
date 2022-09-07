@@ -11,11 +11,14 @@ class TestInteraction extends Interaction
 
     private ?Closure $callback;
 
-    public function __construct(object $target, Closure $callback = null)
+    public function __construct(object $target = null, Closure $callback = null)
     {
-        parent::__construct($target);
+        if ($target instanceof Closure) {
+            $callback = $target;
+            $target = null;
+        }
 
-        $this->setStatus(Status::FULFILLED);
+        parent::__construct($target ?: new TestTarget());
 
         $this->callback = $callback;
     }
@@ -24,8 +27,16 @@ class TestInteraction extends Interaction
     {
         if ($this->callback) {
             return ($this->callback)();
+        } else {
+            $this->setStatus(Status::FULFILLED);
         }
     }
 
+    public function setCallback(?Closure $callback): TestInteraction
+    {
+        $this->callback = $callback;
+
+        return $this;
+    }
 
 }

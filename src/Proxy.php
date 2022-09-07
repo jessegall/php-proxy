@@ -2,9 +2,10 @@
 
 namespace JesseGall\Proxy;
 
-use JesseGall\Proxy\Interactions\Call;
-use JesseGall\Proxy\Interactions\Get;
-use JesseGall\Proxy\Interactions\Set;
+use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
+use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Interactions\GetInteraction;
+use JesseGall\Proxy\Interactions\SetInteraction;
 
 /**
  * @template T
@@ -13,26 +14,28 @@ use JesseGall\Proxy\Interactions\Set;
 class Proxy
 {
     /**
-     * The target of the proxy
+     * The target of the proxy.
      *
      * @var T
      */
     protected object $target;
 
     /**
+     * The parent proxy.
+     *
      * @var Proxy|null
      */
     private ?Proxy $parent;
 
     /**
-     * The list of concluded interactions
+     * The list of concluded interactions.
      *
      * @var ConcludedInteraction[]
      */
     protected array $concludedInteractions;
 
     /**
-     * The interaction forwarder of the proxy
+     * The interaction forwarder of the proxy.
      *
      * @var Forwarder
      */
@@ -44,6 +47,7 @@ class Proxy
     public function __construct(object $target)
     {
         $this->target = $target;
+        $this->parent = null;
         $this->forwarder = new Forwarder();
         $this->concludedInteractions = [];
     }
@@ -56,6 +60,7 @@ class Proxy
      * @param string $method
      * @param array $parameters
      * @return Proxy|mixed
+     * @throws ForwardStrategyMissingException
      */
     public function __call(string $method, array $parameters): mixed
     {
@@ -75,6 +80,7 @@ class Proxy
      *
      * @param string $property
      * @return Proxy|mixed
+     * @throws ForwardStrategyMissingException
      */
     public function __get(string $property): mixed
     {
@@ -94,6 +100,7 @@ class Proxy
      * @param string $property
      * @param mixed $value
      * @return void
+     * @throws ForwardStrategyMissingException
      */
     public function __set(string $property, mixed $value): void
     {
@@ -103,42 +110,45 @@ class Proxy
     }
 
     /**
-     * Forward a method call to the target using the forwarder
+     * Forward a method call to the target using the forwarder.
      *
      * @param string $method
      * @param array $parameters
-     * @return ConcludedInteraction<Call>
+     * @return ConcludedInteraction<CallInteraction>
+     * @throws ForwardStrategyMissingException
      */
     protected function forwardCall(string $method, array $parameters): ConcludedInteraction
     {
-        return $this->forwarder->forward(new Call($this->target, $method, $parameters));
+        return $this->forwarder->forward(new CallInteraction($this->target, $method, $parameters));
     }
 
     /**
-     * Forward accessing a property of the target using the forwarder
+     * Forward accessing a property of the target using the forwarder.
      *
      * @param string $property
-     * @return ConcludedInteraction<Get>
+     * @return ConcludedInteraction<GetInteraction>
+     * @throws ForwardStrategyMissingException
      */
     protected function forwardGet(string $property): ConcludedInteraction
     {
-        return $this->forwarder->forward(new Get($this->target, $property));
+        return $this->forwarder->forward(new GetInteraction($this->target, $property));
     }
 
     /**
-     * Forward setting a property of the target using the forwarder
+     * Forward setting a property of the target using the forwarder.
      *
      * @param string $property
      * @param mixed $value
-     * @return ConcludedInteraction<Set>
+     * @return ConcludedInteraction<SetInteraction>
+     * @throws ForwardStrategyMissingException
      */
     protected function forwardSet(string $property, mixed $value): ConcludedInteraction
     {
-        return $this->forwarder->forward(new Set($this->target, $property, $value));
+        return $this->forwarder->forward(new SetInteraction($this->target, $property, $value));
     }
 
     /**
-     * Decorate the given value if value is an object
+     * Decorate the given value if value is an object.
      *
      * @param mixed $value
      * @return mixed
@@ -153,7 +163,7 @@ class Proxy
     }
 
     /**
-     * Decorate the object by wrapping it in a new proxy
+     * Decorate the object by wrapping it in a new proxy.
      *
      * @param object $object
      * @return Proxy
@@ -170,7 +180,7 @@ class Proxy
     }
 
     /**
-     * Log a concluded interaction
+     * Log a concluded interaction.
      *
      * @param ConcludedInteraction $concluded
      * @return void

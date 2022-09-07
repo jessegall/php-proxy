@@ -2,7 +2,8 @@
     "name": "jessegall/proxy",
     "autoload": {
         "psr-4": {
-            "JesseGall\\Proxy\\": "src/"
+            "JesseGall\\Proxy\\": "src/",
+            "JesseGall\\Proxy\\Implementations\\": "implementations/"
         },
         "files": [
             "src/helpers.php"
@@ -19,8 +20,8 @@
         }
     ],
     "scripts": {
-        "test": "@php -dxdebug.mode=coverage ./vendor/bin/phpunit --testdox --coverage-text --colors=auto",
-        "test-filter": "@php -dxdebug.mode=coverage ./vendor/bin/phpunit --testdox --coverage-text --colors=auto --filter="
+        "test": "@php -dxdebug.mode=coverage ./vendor/bin/phpunit --testdox --coverage-html=report --colors=auto",
+        "test-filter": "@test --filter="
     },
     "require": {
         "php": ">=8.1"

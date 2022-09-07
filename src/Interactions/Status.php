@@ -28,9 +28,4 @@ enum Status
      */
     case CANCELLED;
 
-    /**
-     * Interaction was not able to start executing due to an issue.
-     * The forwarder will mark the interaction as unprocessable when no forward strategy is found for the interaction.
-     */
-    case UNPROCESSABLE;
 }

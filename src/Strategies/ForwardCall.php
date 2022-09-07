@@ -2,20 +2,20 @@
 
 namespace JesseGall\Proxy\Strategies;
 
-use JesseGall\Proxy\Interactions\Call;
+use JesseGall\Proxy\Interactions\CallInteraction;
 
 /**
- * @extends ForwardStrategy<Call>
+ * @extends ForwardStrategy<CallInteraction>
  */
 class ForwardCall extends ForwardStrategy
 {
 
-    public function __construct(Call $interaction)
+    public function __construct(CallInteraction $interaction)
     {
         parent::__construct($interaction);
     }
 
-    public function doExecute(): mixed
+    protected function doExecute(): mixed
     {
         $target = $this->interaction->getTarget();
         $method = $this->interaction->getMethod();

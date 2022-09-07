@@ -2,15 +2,15 @@
 
 namespace JesseGall\Proxy\Strategies;
 
-use JesseGall\Proxy\Interactions\Get;
+use JesseGall\Proxy\Interactions\GetInteraction;
 
 /**
- * @extends ForwardStrategy<Get>
+ * @extends ForwardStrategy<GetInteraction>
  */
 class ForwardGet extends ForwardStrategy
 {
 
-    public function doExecute(): mixed
+    protected function doExecute(): mixed
     {
         $target = $this->interaction->getTarget();
         $property = $this->interaction->getProperty();
