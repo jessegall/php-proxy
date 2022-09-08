@@ -2,6 +2,7 @@
 
 namespace JesseGall\Proxy;
 
+use Closure;
 use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
@@ -50,29 +51,6 @@ class Forwarder
     }
 
     /**
-     * Register an interceptor.
-     *
-     * @param Intercepts|class-string<Intercepts>|class-string<Intercepts>[] $interceptor
-     * @return void
-     */
-    public function registerInterceptor(Intercepts|string|array $interceptor): void
-    {
-        if (is_string($interceptor) || is_array($interceptor)) {
-            $interceptor = (array)$interceptor;
-
-            foreach ($interceptor as $type) {
-                if (! is_subclass_of($type, Intercepts::class)) {
-                    throw new \InvalidArgumentException('Type must be an instance of InterceptorContract');
-                }
-
-                $this->interceptors[] = new $type();
-            }
-        } else {
-            $this->interceptors[] = $interceptor;
-        }
-    }
-
-    /**
      * Forward the interaction to the target and return concluded interaction.
      * Before forwarding notify interceptors about the interaction.
      * Cancel forwarding when the status is not pending.
@@ -92,7 +70,7 @@ class Forwarder
             return new ConcludedInteraction($interaction);
         }
 
-        $strategy = $this->newForwardStrategy($interaction);
+        $strategy = $this->newStrategy($interaction);
 
         $this->tryExecuting($strategy);
 
@@ -121,15 +99,42 @@ class Forwarder
     }
 
     /**
+     * Register an interceptor.
+     *
+     * @param Intercepts|Closure|class-string<Intercepts>|Closure[]|class-string<Intercepts>[] $interceptor
+     * @return void
+     */
+    public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
+    {
+        if (! is_array($interceptor)) {
+            $interceptor = [$interceptor];
+        }
+
+        foreach ($interceptor as $item) {
+            if ($item instanceof Closure) {
+                $item = new ClosureInterceptor($item);
+            } elseif (is_string($item)) {
+                $item = new $item;
+            }
+
+            $this->interceptors[] = $item;
+        }
+    }
+
+    /**
      * Create a new forward strategy for the given interaction.
      *
      * @param Interaction $interaction
      * @return ForwardStrategy
      * @throws ForwardStrategyMissingException
      */
-    protected function newForwardStrategy(Interaction $interaction): ForwardStrategy
+    protected function newStrategy(Interaction $interaction): ForwardStrategy
     {
-        $type = $this->strategies[$interaction::class] ?? throw new ForwardStrategyMissingException($interaction);
+        $type = $this->getStrategy(get_class($interaction));
+
+        if (is_null($type)) {
+            throw new ForwardStrategyMissingException($interaction);
+        }
 
         return new $type($interaction);
     }
@@ -158,7 +163,7 @@ class Forwarder
     }
 
     /**
-     * @param array $interceptors
+     * @param Intercepts[] $interceptors
      * @return $this
      */
     public function setInterceptors(array $interceptors): static
@@ -182,25 +187,31 @@ class Forwarder
      */
     public function setStrategies(array $strategies): static
     {
-        $this->strategies = [];
-
-        foreach ($strategies as $interaction => $strategy) {
-            $this->setStrategy($interaction, $strategy);
-        }
+        $this->strategies = $strategies;
 
         return $this;
     }
 
+    /**
+     * Get the strategy for a specific interaction type
+     *
+     * @param class-string<Intercepts> $interception
+     * @return string|null
+     */
+    public function getStrategy(string $interception): ?string
+    {
+        return $this->strategies[$interception] ?? null;
+    }
+
+    /**
+     * Sets a strategy for a specific interaction type
+     *
+     * @param callable-string<Intercepts> $interaction
+     * @param class-string<ForwardStrategy> $strategy
+     * @return $this
+     */
     public function setStrategy(string $interaction, string $strategy): static
     {
-        if (! is_subclass_of($interaction, Interaction::class)) {
-            throw new \InvalidArgumentException('$interaction must be an instance of Interaction');
-        }
-
-        if (! is_subclass_of($strategy, ForwardStrategy::class)) {
-            throw new \InvalidArgumentException('$strategy must be an instance of ForwardStrategy');
-        }
-
         $this->strategies[$interaction] = $strategy;
 
         return $this;

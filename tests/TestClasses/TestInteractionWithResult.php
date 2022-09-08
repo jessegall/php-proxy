@@ -9,7 +9,7 @@ class TestInteractionWithResult extends TestInteraction implements InteractsAndR
 
     private mixed $result;
 
-    public function __construct(mixed $result)
+    public function __construct(mixed $result = null)
     {
         parent::__construct();
 

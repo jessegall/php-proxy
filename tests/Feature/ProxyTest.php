@@ -81,6 +81,36 @@ class ProxyTest extends TestCase
         $this->proxy->property = 'value';
     }
 
+    public function test_call_interaction_returns_decorated_object_when_result_is_an_object()
+    {
+        $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
+
+        $forwarder->method('forward')->willReturn(
+            new ConcludedInteraction(new TestInteractionWithResult($result = new \stdClass()))
+        );
+
+        $actual = $this->proxy->call();
+
+        $this->assertInstanceOf(Proxy::class, $actual);
+
+        $this->assertEquals($result, $actual->getTarget());
+    }
+
+    public function test_get_interaction_returns_decorated_object_when_result_is_an_object()
+    {
+        $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
+
+        $forwarder->method('forward')->willReturn(
+            new ConcludedInteraction(new TestInteractionWithResult($result = new \stdClass()))
+        );
+
+        $actual = $this->proxy->property;
+
+        $this->assertInstanceOf(Proxy::class, $actual);
+
+        $this->assertEquals($result, $actual->getTarget());
+    }
+
     public function test_call_interaction_is_logged()
     {
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
@@ -120,19 +150,5 @@ class ProxyTest extends TestCase
         $this->assertContains($interaction, $this->proxy->getConcludedInteractions());
     }
 
-    public function test_forwarding_call_returns_decorated_object_when_result_is_an_object()
-    {
-        $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
-
-        $forwarder->method('forward')->willReturn(
-            new ConcludedInteraction(new TestInteractionWithResult($result = new \stdClass()))
-        );
-
-        $actual = $this->proxy->call();
-
-        $this->assertInstanceOf(Proxy::class, $actual);
-
-        $this->assertEquals($result, $actual->getTarget());
-    }
 
 }
