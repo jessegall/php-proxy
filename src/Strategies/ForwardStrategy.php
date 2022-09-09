@@ -2,12 +2,13 @@
 
 namespace JesseGall\Proxy\Strategies;
 
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 
 /**
- * @template T of Interaction
+ * @template T of Interacts
  */
 abstract class ForwardStrategy
 {
@@ -15,7 +16,7 @@ abstract class ForwardStrategy
     /**
      * @var T
      */
-    protected readonly Interaction $interaction;
+    protected readonly Interacts $interaction;
 
     /**
      * The result of the execution
@@ -27,7 +28,7 @@ abstract class ForwardStrategy
     /**
      * @param T $interaction
      */
-    public function __construct(Interaction $interaction)
+    public function __construct(Interacts $interaction)
     {
         $this->interaction = $interaction;
     }
@@ -59,7 +60,7 @@ abstract class ForwardStrategy
     /**
      * @return T
      */
-    public function getInteraction(): Interaction
+    public function getInteraction(): Interacts
     {
         return $this->interaction;
     }

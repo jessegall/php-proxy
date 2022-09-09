@@ -150,5 +150,20 @@ class ProxyTest extends TestCase
         $this->assertContains($interaction, $this->proxy->getConcludedInteractions());
     }
 
+    public function test_cached_concluded_interaction_is_returned()
+    {
+        invade($this->proxy)->logInteraction(
+            new ConcludedInteraction(new TestInteractionWithResult($expected = 'expected'))
+        );
+
+        $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
+
+        $forwarder->expects($this->never())->method('forward');
+
+        $actual = invade($this->proxy)->processInteraction(new TestInteractionWithResult());
+
+        $this->assertEquals($expected, $actual);
+    }
+
 
 }

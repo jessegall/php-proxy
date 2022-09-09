@@ -6,15 +6,16 @@ use Closure;
 use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
 use JesseGall\Proxy\Interactions\GetInteraction;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\SetInteraction;
 use JesseGall\Proxy\Interactions\Status;
 use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
-use JesseGall\Proxy\Strategies\ForwardCall;
-use JesseGall\Proxy\Strategies\ForwardGet;
-use JesseGall\Proxy\Strategies\ForwardSet;
+use JesseGall\Proxy\Strategies\CallStrategy;
+use JesseGall\Proxy\Strategies\GetStrategy;
+use JesseGall\Proxy\Strategies\SetStrategy;
 use JesseGall\Proxy\Strategies\ForwardStrategy;
 
 class Forwarder
@@ -26,9 +27,9 @@ class Forwarder
      * @var array<class-string<Interaction>, class-string<ForwardStrategy>>
      */
     protected array $strategies = [
-        CallInteraction::class => ForwardCall::class,
-        GetInteraction::class => ForwardGet::class,
-        SetInteraction::class => ForwardSet::class,
+        CallInteraction::class => CallStrategy::class,
+        GetInteraction::class => GetStrategy::class,
+        SetInteraction::class => SetStrategy::class,
     ];
 
     /**
@@ -59,7 +60,7 @@ class Forwarder
      * @return ConcludedInteraction
      * @throws ForwardStrategyMissingException
      */
-    public function forward(Interaction $interaction): ConcludedInteraction
+    public function forward(Interacts $interaction): ConcludedInteraction
     {
         $this->notifyInterceptors($interaction);
 

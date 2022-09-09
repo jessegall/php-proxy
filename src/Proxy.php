@@ -4,8 +4,9 @@ namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
+use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
 use JesseGall\Proxy\Interactions\GetInteraction;
-use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\SetInteraction;
 
 /**
@@ -26,7 +27,21 @@ class Proxy
      *
      * @var Proxy|null
      */
-    private ?Proxy $parent;
+    protected ?Proxy $parent;
+
+    /**
+     * // TODO
+     *
+     * @var DecorateMode
+     */
+    protected DecorateMode $decorateMode;
+
+    /**
+     * // TODO
+     *
+     * @var bool
+     */
+    protected bool $cacheEnabled;
 
     /**
      * The list of concluded interactions.
@@ -49,6 +64,8 @@ class Proxy
     {
         $this->target = $target;
         $this->parent = null;
+        $this->decorateMode = DecorateMode::EQUALS;
+        $this->cacheEnabled = true;
         $this->forwarder = new Forwarder();
         $this->concludedInteractions = [];
     }
@@ -65,13 +82,7 @@ class Proxy
      */
     public function __call(string $method, array $parameters): mixed
     {
-        $concluded = $this->forwardAndLog(
-            new CallInteraction($this->target, $method, $parameters)
-        );
-
-        return $this->decorateIfIsObject(
-            $concluded->getResult()
-        );
+        return $this->processInteraction(new CallInteraction($this->target, $method, $parameters));
     }
 
     /**
@@ -85,13 +96,7 @@ class Proxy
      */
     public function __get(string $property): mixed
     {
-        $concluded = $this->forwardAndLog(
-            new GetInteraction($this->target, $property)
-        );
-
-        return $this->decorateIfIsObject(
-            $concluded->getResult()
-        );
+        return $this->processInteraction(new GetInteraction($this->target, $property));
     }
 
     /**
@@ -105,57 +110,54 @@ class Proxy
      */
     public function __set(string $property, mixed $value): void
     {
-        $this->forwardAndLog(
-            new SetInteraction($this->target, $property, $value)
-        );
+        $this->processInteraction(new SetInteraction($this->target, $property, $value));
     }
 
     /**
-     * Forward the interaction to the forwarder and log the result
+     * // TODO
      *
-     * @param Interaction $interaction
-     * @return ConcludedInteraction
      * @throws ForwardStrategyMissingException
      */
-    protected function forwardAndLog(Interaction $interaction): ConcludedInteraction
+    protected function processInteraction(Interacts $interaction): mixed
     {
-        $concluded = $this->forwarder->forward($interaction);
+        if ($this->isLogged($interaction)) {
+            $concluded = $this->getLogged($interaction);
+        } else {
+            $concluded = $this->forwarder->forward($interaction);
+        }
 
         $this->logInteraction($concluded);
 
-        return $concluded;
-    }
-
-    /**
-     * Decorate the given value if value is an object.
-     *
-     * @param mixed $value
-     * @return mixed
-     */
-    protected function decorateIfIsObject(mixed $value): mixed
-    {
-        if (is_object($value)) {
-            return $this->decorateObject($value);
+        if ($concluded->getInteraction() instanceof InteractsAndReturnsResult) {
+            return $this->decorateResult($concluded);
         }
 
-        return $value;
+        return null;
     }
 
     /**
-     * Decorate the object by wrapping it in a new proxy.
+     * // TODO
      *
-     * @param object $object
-     * @return Proxy
+     * @param ConcludedInteraction $interaction
+     * @return mixed
      */
-    protected function decorateObject(object $object): Proxy
+    protected function decorateResult(ConcludedInteraction $interaction): mixed
     {
-        $decorated = new static($object);
+        $result = $interaction->getResult();
 
-        $decorated->forwarder = $this->forwarder;
+        if (! is_object($result)) {
+            return $result;
+        }
 
-        $decorated->parent = $this;
+        if ($this->decorateMode === DecorateMode::NEVER) {
+            return $result;
+        }
 
-        return $decorated;
+        if ($this->decorateMode === DecorateMode::EQUALS && $result !== $this->target) {
+            return $result;
+        }
+
+        return (new static($result))->setForwarder($this->forwarder)->setParent($this);
     }
 
     /**
@@ -166,7 +168,38 @@ class Proxy
      */
     protected function logInteraction(ConcludedInteraction $concluded): void
     {
-        $this->concludedInteractions[] = $concluded;
+        $hash = $this->generateInteractionHash($concluded->getInteraction());
+
+        $this->concludedInteractions[$hash] = $concluded;
+    }
+
+    /**
+     * @param Interacts $interaction
+     * @return bool
+     */
+    protected function isLogged(Interacts $interaction): bool
+    {
+        return array_key_exists($this->generateInteractionHash($interaction), $this->concludedInteractions);
+    }
+
+    /**
+     * @param Interacts $interacts
+     * @return ConcludedInteraction
+     */
+    protected function getLogged(Interacts $interaction): ConcludedInteraction
+    {
+        return $this->concludedInteractions[$this->generateInteractionHash($interaction)];
+    }
+
+    /**
+     * Generates a hash for the given interaction
+     *
+     * @param Interacts $interaction
+     * @return string
+     */
+    protected function generateInteractionHash(Interacts $interaction): string
+    {
+        return (new InteractionHash($interaction))->generate();
     }
 
     # --- Getters and Setters ---

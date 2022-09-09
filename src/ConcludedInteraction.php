@@ -36,6 +36,14 @@ class ConcludedInteraction
     }
 
     /**
+     * @return T
+     */
+    public function getInteraction(): Interacts
+    {
+        return $this->interaction;
+    }
+
+    /**
      * @return float
      */
     public function getTimestamp(): float
@@ -57,15 +65,6 @@ class ConcludedInteraction
     public function getStatus(): Status
     {
         return $this->interaction->getStatus();
-    }
-
-    /**
-     * @param Status $status
-     * @return bool
-     */
-    public function hasStatus(Status $status): bool
-    {
-        return $this->interaction->hasStatus($status);
     }
 
     /**

@@ -3,14 +3,15 @@
 namespace JesseGall\Proxy\Strategies;
 
 use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
 
 /**
  * @extends ForwardStrategy<CallInteraction>
  */
-class ForwardCall extends ForwardStrategy
+class CallStrategy extends ForwardStrategy
 {
 
-    public function __construct(CallInteraction $interaction)
+    public function __construct(InteractsWithMethod $interaction)
     {
         parent::__construct($interaction);
     }

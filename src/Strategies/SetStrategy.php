@@ -3,13 +3,19 @@
 namespace JesseGall\Proxy\Strategies;
 
 
+use JesseGall\Proxy\Interactions\Contracts\InteractsWithProperty;
 use JesseGall\Proxy\Interactions\SetInteraction;
 
 /**
  * @extends ForwardStrategy<SetInteraction>
  */
-class ForwardSet extends ForwardStrategy
+class SetStrategy extends ForwardStrategy
 {
+
+    public function __construct(InteractsWithProperty $interaction)
+    {
+        parent::__construct($interaction);
+    }
 
     protected function doExecute(): void
     {

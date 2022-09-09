@@ -2,13 +2,19 @@
 
 namespace JesseGall\Proxy\Strategies;
 
+use JesseGall\Proxy\Interactions\Contracts\InteractsWithProperty;
 use JesseGall\Proxy\Interactions\GetInteraction;
 
 /**
  * @extends ForwardStrategy<GetInteraction>
  */
-class ForwardGet extends ForwardStrategy
+class GetStrategy extends ForwardStrategy
 {
+
+    public function __construct(InteractsWithProperty $interaction)
+    {
+        parent::__construct($interaction);
+    }
 
     protected function doExecute(): mixed
     {

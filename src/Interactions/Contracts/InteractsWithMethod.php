@@ -9,4 +9,8 @@ interface InteractsWithMethod extends Interacts
 
     public function setMethod(string $method): static;
 
+    public function getParameters(): array;
+
+    public function setParameters(array $parameters): static;
+
 }
