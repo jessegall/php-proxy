@@ -41,7 +41,7 @@ class Proxy
      *
      * @var bool
      */
-    protected bool $cacheEnabled;
+    protected bool $useCache;
 
     /**
      * The list of concluded interactions.
@@ -65,7 +65,7 @@ class Proxy
         $this->target = $target;
         $this->parent = null;
         $this->decorateMode = DecorateMode::EQUALS;
-        $this->cacheEnabled = true;
+        $this->useCache = true;
         $this->forwarder = new Forwarder();
         $this->concludedInteractions = [];
     }
@@ -120,8 +120,8 @@ class Proxy
      */
     protected function processInteraction(Interacts $interaction): mixed
     {
-        if ($this->isLogged($interaction)) {
-            $concluded = $this->getLogged($interaction);
+        if ($this->useCache && $this->hasCached($interaction)) {
+            $concluded = $this->getCached($interaction);
         } else {
             $concluded = $this->forwarder->forward($interaction);
         }
@@ -175,20 +175,20 @@ class Proxy
 
     /**
      * @param Interacts $interaction
-     * @return bool
+     * @return ConcludedInteraction|null
      */
-    protected function isLogged(Interacts $interaction): bool
+    protected function getCached(Interacts $interaction): ?ConcludedInteraction
     {
-        return array_key_exists($this->generateInteractionHash($interaction), $this->concludedInteractions);
+        return $this->concludedInteractions[$this->generateInteractionHash($interaction)] ?? null;
     }
 
     /**
-     * @param Interacts $interacts
-     * @return ConcludedInteraction
+     * @param Interacts $interaction
+     * @return bool
      */
-    protected function getLogged(Interacts $interaction): ConcludedInteraction
+    private function hasCached(Interacts $interaction): bool
     {
-        return $this->concludedInteractions[$this->generateInteractionHash($interaction)];
+        return ! is_null($this->getCached($interaction));
     }
 
     /**
