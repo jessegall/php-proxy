@@ -13,7 +13,7 @@ use JesseGall\Proxy\Interactions\SetInteraction;
  * @template T
  * @mixin T
  */
-class Proxy
+class Proxy implements \ArrayAccess
 {
     /**
      * The target of the proxy.
@@ -60,9 +60,9 @@ class Proxy
     /**
      * T $subject
      */
-    public function __construct(object $target)
+    public function __construct(object|array &$target)
     {
-        $this->target = $target;
+        $this->target = is_object($target) ? $target : new TargetArray($target);
         $this->parent = null;
         $this->decorateMode = DecorateMode::EQUALS;
         $this->useCache = true;
@@ -78,7 +78,6 @@ class Proxy
      * @param string $method
      * @param array $parameters
      * @return Proxy|mixed
-     * @throws ForwardStrategyMissingException
      */
     public function __call(string $method, array $parameters): mixed
     {
@@ -92,7 +91,6 @@ class Proxy
      *
      * @param string $property
      * @return Proxy|mixed
-     * @throws ForwardStrategyMissingException
      */
     public function __get(string $property): mixed
     {
@@ -106,7 +104,6 @@ class Proxy
      * @param string $property
      * @param mixed $value
      * @return void
-     * @throws ForwardStrategyMissingException
      */
     public function __set(string $property, mixed $value): void
     {
@@ -114,9 +111,35 @@ class Proxy
     }
 
     /**
+     * @return array
+     */
+    public function getConcludedInteractions(): array
+    {
+        return $this->concludedInteractions;
+    }
+
+    public function offsetExists(mixed $offset): bool
+    {
+        // TODO: Implement offsetExists() method.
+    }
+
+    public function offsetGet(mixed $offset): mixed
+    {
+        // TODO: Implement offsetGet() method.
+    }
+
+    public function offsetSet(mixed $offset, mixed $value): void
+    {
+        // TODO: Implement offsetSet() method.
+    }
+
+    public function offsetUnset(mixed $offset): void
+    {
+        // TODO: Implement offsetUnset() method.
+    }
+
+    /**
      * // TODO
-     *
-     * @throws ForwardStrategyMissingException
      */
     protected function processInteraction(Interacts $interaction): mixed
     {
@@ -259,14 +282,6 @@ class Proxy
         $this->forwarder = $forwarder;
 
         return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getConcludedInteractions(): array
-    {
-        return $this->concludedInteractions;
     }
 
 }

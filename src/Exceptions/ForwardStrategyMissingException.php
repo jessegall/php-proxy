@@ -4,7 +4,7 @@ namespace JesseGall\Proxy\Exceptions;
 
 use JesseGall\Proxy\Interactions\Interaction;
 
-class ForwardStrategyMissingException extends \Exception
+class ForwardStrategyMissingException extends \RuntimeException
 {
 
     /**

@@ -23,7 +23,7 @@ abstract class ForwardStrategy
      *
      * @var mixed
      */
-    protected mixed $result;
+    protected mixed $result = null;
 
     /**
      * @param T $interaction
