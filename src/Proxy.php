@@ -60,7 +60,7 @@ class Proxy implements \ArrayAccess
     /**
      * T $subject
      */
-    public function __construct(object|array &$target)
+    public function __construct(object|array $target)
     {
         $this->target = is_object($target) ? $target : new TargetArray($target);
         $this->parent = null;
