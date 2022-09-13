@@ -18,6 +18,7 @@ class ExceptionHandler
      * Handles the failed strategy.
      * Sets the status of the interaction to failed
      *
+     * @throws \Exception
      */
     public function handle(ExecutionException $exception): void
     {
@@ -26,6 +27,10 @@ class ExceptionHandler
         $interaction->setStatus(Status::FAILED);
 
         $this->callHandlers($exception);
+
+        if ($exception->shouldThrow()) {
+            throw $exception->getException();
+        }
     }
 
     /**

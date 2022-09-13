@@ -8,8 +8,10 @@ use JesseGall\Proxy\Strategies\ForwardStrategy;
 class ExecutionException extends Exception
 {
 
-    private ForwardStrategy $strategy;
-    private Exception $exception;
+    protected ForwardStrategy $strategy;
+    protected Exception $exception;
+    protected bool $shouldThrow;
+
 
     public function __construct(ForwardStrategy $strategy, Exception $exception)
     {
@@ -17,6 +19,7 @@ class ExecutionException extends Exception
 
         $this->strategy = $strategy;
         $this->exception = $exception;
+        $this->shouldThrow = true;
     }
 
     /**
@@ -33,6 +36,24 @@ class ExecutionException extends Exception
     public function getException(): Exception
     {
         return $this->exception;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldThrow(): bool
+    {
+        return $this->shouldThrow;
+    }
+
+    /**
+     * @param bool $throw
+     * @return ExecutionException
+     */
+    public function setShouldThrow(bool $throw): ExecutionException
+    {
+        $this->shouldThrow = $throw;
+        return $this;
     }
 
 }
