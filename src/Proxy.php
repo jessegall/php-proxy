@@ -281,6 +281,25 @@ class Proxy implements \ArrayAccess
     }
 
     /**
+     * @return DecorateMode
+     */
+    public function getDecorateMode(): DecorateMode
+    {
+        return $this->decorateMode;
+    }
+
+    /**
+     * @param DecorateMode $decorateMode
+     * @return Proxy
+     */
+    public function setDecorateMode(DecorateMode $decorateMode): Proxy
+    {
+        $this->decorateMode = $decorateMode;
+
+        return $this;
+    }
+
+    /**
      * @return Forwarder
      */
     public function getForwarder(): Forwarder

@@ -4,6 +4,7 @@ namespace JesseGall\Proxy;
 
 use Closure;
 use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Interaction;
 
 class ClosureInterceptor implements Intercepts
@@ -16,7 +17,7 @@ class ClosureInterceptor implements Intercepts
         $this->closure = $closure;
     }
 
-    public function intercept(Interaction $interaction, object $interactor = null): void
+    public function intercept(Interacts $interaction, object $interactor = null): void
     {
         ($this->closure)($interaction);
     }

@@ -3,6 +3,7 @@
 namespace Test\Feature;
 
 use JesseGall\Proxy\ConcludedInteraction;
+use JesseGall\Proxy\DecorateMode;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\GetInteraction;
 use JesseGall\Proxy\Interactions\SetInteraction;
@@ -106,6 +107,8 @@ class ProxyTest extends TestCase
     {
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 
+        $this->proxy->setDecorateMode(DecorateMode::ALWAYS);
+
         $forwarder->method('forward')->willReturn(
             new ConcludedInteraction(new TestInteractionWithResult($result = new \stdClass()))
         );
@@ -117,9 +120,11 @@ class ProxyTest extends TestCase
         $this->assertEquals($result, $actual->getTarget());
     }
 
-    public function test_get_interaction_returns_decorated_object_when_result_is_an_object_and_decorate()
+    public function test_get_interaction_returns_decorated_object_when_result_is_an_object()
     {
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
+
+        $this->proxy->setDecorateMode(DecorateMode::ALWAYS);
 
         $forwarder->method('forward')->willReturn(
             new ConcludedInteraction(new TestInteractionWithResult($result = new \stdClass()))

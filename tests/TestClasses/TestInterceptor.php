@@ -3,12 +3,12 @@
 namespace Test\TestClasses;
 
 use JesseGall\Proxy\Contracts\Intercepts;
-use JesseGall\Proxy\Interactions\Interaction;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 
 class TestInterceptor implements Intercepts
 {
 
-    public function intercept(Interaction $interaction, object $interactor = null): void
+    public function intercept(Interacts $interaction, object $interactor = null): void
     {
         //
     }
