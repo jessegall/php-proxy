@@ -2,7 +2,6 @@
 
 namespace JesseGall\Proxy;
 
-use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
@@ -120,22 +119,22 @@ class Proxy implements \ArrayAccess
 
     public function offsetExists(mixed $offset): bool
     {
-        // TODO: Implement offsetExists() method.
+        return isset($this->target[$offset]);
     }
 
     public function offsetGet(mixed $offset): mixed
     {
-        // TODO: Implement offsetGet() method.
+        return $this->__get($offset);
     }
 
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        // TODO: Implement offsetSet() method.
+        $this->__set($offset, $value);
     }
 
     public function offsetUnset(mixed $offset): void
     {
-        // TODO: Implement offsetUnset() method.
+        unset($this->target[$offset]);
     }
 
     /**
@@ -146,7 +145,7 @@ class Proxy implements \ArrayAccess
         if ($this->useCache && $this->hasCached($interaction)) {
             $concluded = $this->getCached($interaction);
         } else {
-            $concluded = $this->forwarder->forward($interaction);
+            $concluded = $this->forwarder->forward($interaction, $this->getInteractor());
         }
 
         $this->logInteraction($concluded);
@@ -223,6 +222,22 @@ class Proxy implements \ArrayAccess
     protected function generateInteractionHash(Interacts $interaction): string
     {
         return (new InteractionHash($interaction))->generate();
+    }
+
+    /**
+     * Returns the interactor
+     *
+     * @return object|null
+     */
+    protected function getInteractor(): ?object
+    {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 10) as $trace) {
+            $object = $trace['object'] ?? null;
+
+            if ($object != $this) {
+                return $object;
+            }
+        }
     }
 
     # --- Getters and Setters ---

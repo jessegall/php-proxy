@@ -19,9 +19,9 @@ class TestForwarder extends Forwarder
         parent::tryExecuting($strategy);
     }
 
-    public function notifyInterceptors(Interaction $interaction): void
+    public function notifyInterceptors(Interaction $interaction, object $interactor = null): void
     {
-        parent::notifyInterceptors($interaction);
+        parent::notifyInterceptors($interaction, $interactor);
     }
 
 }

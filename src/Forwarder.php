@@ -65,12 +65,12 @@ class Forwarder
      * Cancel forwarding when the status is not pending.
      *
      * @param Interaction $interaction
+     * @param object|null $interactor
      * @return ConcludedInteraction
-     * @throws ForwardStrategyMissingException
      */
-    public function forward(Interacts $interaction): ConcludedInteraction
+    public function forward(Interacts $interaction, object $interactor = null): ConcludedInteraction
     {
-        $this->notifyInterceptors($interaction);
+        $this->notifyInterceptors($interaction, $interactor);
 
         // Interceptors might change the status of the interaction.
         // That's why we check if the status is still pending after the interceptors are notified.
@@ -164,10 +164,10 @@ class Forwarder
      * @param Interaction $interaction
      * @return void
      */
-    protected function notifyInterceptors(Interaction $interaction): void
+    protected function notifyInterceptors(Interaction $interaction, object $interactor = null): void
     {
         foreach ($this->interceptors as $interceptor) {
-            $interceptor->intercept($interaction);
+            $interceptor->intercept($interaction, $interactor);
         }
     }
 

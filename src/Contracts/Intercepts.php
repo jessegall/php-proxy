@@ -7,6 +7,6 @@ use JesseGall\Proxy\Interactions\Interaction;
 interface Intercepts
 {
 
-    public function intercept(Interaction $interaction): void;
+    public function intercept(Interaction $interaction, object $interactor = null): void;
 
 }

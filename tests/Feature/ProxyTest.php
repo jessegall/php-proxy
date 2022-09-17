@@ -48,12 +48,31 @@ class ProxyTest extends TestCase
         $this->assertEquals($expected, $this->proxy->property);
     }
 
+    public function test_get_interaction_returns_expect_value_when_target_is_array()
+    {
+        $proxy = new Proxy(['property' => $expected = 'value']);
+
+        $actual = $proxy->property;
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_get_interaction_returns_expect_value_when_target_is_array_and_accessed_with_key()
+    {
+        $proxy = new Proxy(['property' => $expected = 'value']);
+
+        $actual = $proxy['property'];
+
+        $this->assertEquals($expected, $actual);
+    }
+
     public function test_call_interaction_is_correctly_forwarded_to_forwarder()
     {
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 
         $forwarder->expects($this->once())->method('forward')->with(
-            new CallInteraction($this->target, 'call', [1, 2, 3])
+            new CallInteraction($this->target, 'call', [1, 2, 3]),
+            $this
         );
 
         $this->proxy->call(1, 2, 3);
@@ -64,7 +83,8 @@ class ProxyTest extends TestCase
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 
         $forwarder->expects($this->once())->method('forward')->with(
-            new GetInteraction($this->target, 'property')
+            new GetInteraction($this->target, 'property'),
+            $this
         );
 
         $this->proxy->property;
@@ -75,7 +95,8 @@ class ProxyTest extends TestCase
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 
         $forwarder->expects($this->once())->method('forward')->with(
-            new SetInteraction($this->target, 'property', 'value')
+            new SetInteraction($this->target, 'property', 'value'),
+            $this
         );
 
         $this->proxy->property = 'value';
@@ -96,7 +117,7 @@ class ProxyTest extends TestCase
         $this->assertEquals($result, $actual->getTarget());
     }
 
-    public function test_get_interaction_returns_decorated_object_when_result_is_an_object()
+    public function test_get_interaction_returns_decorated_object_when_result_is_an_object_and_decorate()
     {
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 
