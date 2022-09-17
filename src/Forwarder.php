@@ -3,6 +3,7 @@
 namespace JesseGall\Proxy;
 
 use Closure;
+use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
@@ -12,11 +13,11 @@ use JesseGall\Proxy\Interactions\GetInteraction;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Interactions\SetInteraction;
 use JesseGall\Proxy\Interactions\Status;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Strategies\CallStrategy;
+use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Strategies\ForwardStrategy;
 use JesseGall\Proxy\Strategies\GetStrategy;
 use JesseGall\Proxy\Strategies\SetStrategy;
-use JesseGall\Proxy\Strategies\ForwardStrategy;
 
 class Forwarder
 {
@@ -33,11 +34,18 @@ class Forwarder
     ];
 
     /**
-     * The list of registered interceptors.
+     * The registered interceptors.
      *
      * @var Intercepts[]
      */
     protected array $interceptors = [];
+
+    /**
+     * The registered exception handlers
+     *
+     * @var HandlesFailedStrategies[]
+     */
+    protected array $exceptionHandlers = [];
 
     /**
      * The exception handler.
@@ -120,6 +128,16 @@ class Forwarder
 
             $this->interceptors[] = $item;
         }
+    }
+
+    /**
+     * Removes all the interceptors
+     *
+     * @return void
+     */
+    public function clearInterceptors(): void
+    {
+        $this->interceptors = [];
     }
 
     /**
