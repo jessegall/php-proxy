@@ -234,10 +234,12 @@ class Proxy implements \ArrayAccess
         foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 10) as $trace) {
             $object = $trace['object'] ?? null;
 
-            if ($object != $this) {
+            if ($object && $object != $this) {
                 return $object;
             }
         }
+
+        return null;
     }
 
     # --- Getters and Setters ---
