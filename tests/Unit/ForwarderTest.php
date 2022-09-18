@@ -110,7 +110,7 @@ class ForwarderTest extends TestCase
     public function test_can_clear_interceptors()
     {
         $forwarder = invade($this->forwarder);
-g
+
         $forwarder->interceptors = [
             new TestInterceptor()
         ];
