@@ -2,6 +2,7 @@
 
 namespace JesseGall\Proxy\Interactions;
 
+use JesseGall\Proxy\InteractionHash;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 
 /**
@@ -79,6 +80,14 @@ abstract class Interaction implements Interacts
     public function hasStatus(Status $status): bool
     {
         return $this->status === $status;
+    }
+
+    /**
+     * @return string
+     */
+    public function toHash(): string
+    {
+        return (new InteractionHash($this))->generate();
     }
 
 }

@@ -31,5 +31,10 @@ interface Interacts
      * @return $this
      */
     public function setStatus(Status $status): static;
-    
+
+    /**
+     * @return mixed
+     */
+    public function toHash(): string;
+
 }

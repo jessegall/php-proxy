@@ -147,7 +147,7 @@ class ProxyTest extends TestCase
 
         $this->proxy->call();
 
-        $this->assertContains($interaction, $this->proxy->getConcludedInteractions());
+        $this->assertContains($interaction, $this->proxy->getHistory());
     }
 
     public function test_get_interaction_is_logged()
@@ -160,7 +160,7 @@ class ProxyTest extends TestCase
 
         $this->proxy->property;
 
-        $this->assertContains($interaction, $this->proxy->getConcludedInteractions());
+        $this->assertContains($interaction, $this->proxy->getHistory());
     }
 
     public function test_set_interaction_is_logged()
@@ -173,14 +173,14 @@ class ProxyTest extends TestCase
 
         $this->proxy->property = 'value';
 
-        $this->assertContains($interaction, $this->proxy->getConcludedInteractions());
+        $this->assertContains($interaction, $this->proxy->getHistory());
     }
 
-    public function test_cached_concluded_interaction_is_returned()
+    public function test_when_interaction_is_cached_interaction_is_not_forwarded()
     {
-        invade($this->proxy)->logInteraction(
-            new ConcludedInteraction(new TestInteractionWithResult($expected = 'expected'))
-        );
+        $concluded = new ConcludedInteraction(new TestInteractionWithResult($expected = 'expected'));
+
+        $this->proxy->getCache()->put($concluded->getInteraction()->toHash(), $concluded);
 
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 

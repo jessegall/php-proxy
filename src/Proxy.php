@@ -2,6 +2,7 @@
 
 namespace JesseGall\Proxy;
 
+use JesseGall\Proxy\Contracts\HandlesCache;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
@@ -43,11 +44,9 @@ class Proxy implements \ArrayAccess
     protected bool $useCache;
 
     /**
-     * The list of concluded interactions.
-     *
-     * @var ConcludedInteraction[]
+     * @var Cache
      */
-    protected array $concludedInteractions;
+    protected HandlesCache $cache;
 
     /**
      * The interaction forwarder of the proxy.
@@ -55,6 +54,13 @@ class Proxy implements \ArrayAccess
      * @var Forwarder
      */
     protected Forwarder $forwarder;
+
+    /**
+     * The interaction history
+     *
+     * @var ConcludedInteraction[]
+     */
+    protected array $history;
 
     /**
      * T $subject
@@ -65,8 +71,9 @@ class Proxy implements \ArrayAccess
         $this->parent = null;
         $this->decorateMode = DecorateMode::EQUALS;
         $this->useCache = true;
+        $this->cache = new Cache();
         $this->forwarder = new Forwarder();
-        $this->concludedInteractions = [];
+        $this->history = [];
     }
 
     /**
@@ -109,14 +116,6 @@ class Proxy implements \ArrayAccess
         $this->processInteraction(new SetInteraction($this->target, $property, $value));
     }
 
-    /**
-     * @return array
-     */
-    public function getConcludedInteractions(): array
-    {
-        return $this->concludedInteractions;
-    }
-
     public function offsetExists(mixed $offset): bool
     {
         return isset($this->target[$offset]);
@@ -142,10 +141,14 @@ class Proxy implements \ArrayAccess
      */
     protected function processInteraction(Interacts $interaction): mixed
     {
-        if ($this->useCache && $this->hasCached($interaction)) {
-            $concluded = $this->getCached($interaction);
+        $hash = $interaction->toHash();
+
+        if ($this->useCache && $this->cache->has($hash)) {
+            $concluded = $this->cache->get($hash);
         } else {
             $concluded = $this->forwarder->forward($interaction, $this->getCaller());
+
+            $this->cache->put($hash, $concluded);
         }
 
         $this->logInteraction($concluded);
@@ -190,38 +193,7 @@ class Proxy implements \ArrayAccess
      */
     protected function logInteraction(ConcludedInteraction $concluded): void
     {
-        $hash = $this->generateInteractionHash($concluded->getInteraction());
-
-        $this->concludedInteractions[$hash] = $concluded;
-    }
-
-    /**
-     * @param Interacts $interaction
-     * @return ConcludedInteraction|null
-     */
-    protected function getCached(Interacts $interaction): ?ConcludedInteraction
-    {
-        return $this->concludedInteractions[$this->generateInteractionHash($interaction)] ?? null;
-    }
-
-    /**
-     * @param Interacts $interaction
-     * @return bool
-     */
-    private function hasCached(Interacts $interaction): bool
-    {
-        return ! is_null($this->getCached($interaction));
-    }
-
-    /**
-     * Generates a hash for the given interaction
-     *
-     * @param Interacts $interaction
-     * @return string
-     */
-    protected function generateInteractionHash(Interacts $interaction): string
-    {
-        return (new InteractionHash($interaction))->generate();
+        $this->history[] = $concluded;
     }
 
     /**
@@ -316,6 +288,63 @@ class Proxy implements \ArrayAccess
     public function setForwarder(Forwarder $forwarder): static
     {
         $this->forwarder = $forwarder;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUseCache(): bool
+    {
+        return $this->useCache;
+    }
+
+    /**
+     * @param bool $useCache
+     * @return Proxy
+     */
+    public function setUseCache(bool $useCache): Proxy
+    {
+        $this->useCache = $useCache;
+
+        return $this;
+    }
+
+    /**
+     * @return HandlesCache
+     */
+    public function getCache(): HandlesCache
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param HandlesCache $cache
+     * @return Proxy
+     */
+    public function setCache(HandlesCache $cache): Proxy
+    {
+        $this->cache = $cache;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHistory(): array
+    {
+        return $this->history;
+    }
+
+    /**
+     * @param array $history
+     * @return Proxy
+     */
+    public function setHistory(array $history): Proxy
+    {
+        $this->history = $history;
 
         return $this;
     }
