@@ -3,13 +3,14 @@
 namespace Test\TestClasses;
 
 use JesseGall\Proxy\Forwarder;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Interaction;
 use JesseGall\Proxy\Strategies\ForwardStrategy;
 
 class TestForwarder extends Forwarder
 {
 
-    public function newStrategy(Interaction $interaction): ForwardStrategy
+    public function newStrategy(Interacts $interaction): ForwardStrategy
     {
         return parent::newStrategy($interaction);
     }
@@ -19,9 +20,9 @@ class TestForwarder extends Forwarder
         parent::tryExecuting($strategy);
     }
 
-    public function notifyInterceptors(Interaction $interaction, object $interactor = null): void
+    public function notifyInterceptors(Interacts $interaction, object $caller = null): void
     {
-        parent::notifyInterceptors($interaction, $interactor);
+        parent::notifyInterceptors($interaction, $caller);
     }
 
 }

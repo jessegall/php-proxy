@@ -8,7 +8,7 @@ use JesseGall\Proxy\Interactions\Contracts\Interacts;
 class TestInterceptor implements Intercepts
 {
 
-    public function intercept(Interacts $interaction, object $interactor = null): void
+    public function intercept(Interacts $interaction, object $caller = null): void
     {
         //
     }

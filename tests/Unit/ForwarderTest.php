@@ -2,6 +2,7 @@
 
 namespace Test\Unit;
 
+use JesseGall\Invader\Invader;
 use JesseGall\Proxy\ClosureInterceptor;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Forwarder;
@@ -58,7 +59,7 @@ class ForwarderTest extends TestCase
 
     public function test_interceptor_can_be_registered_with_a_closure()
     {
-        $this->forwarder->registerInterceptor($closure = function () {});
+        $this->forwarder->registerInterceptor($closure = function () { });
 
         $this->assertCount(1, $this->forwarder->getInterceptors());
 
@@ -99,18 +100,24 @@ class ForwarderTest extends TestCase
         $this->assertEquals($expected, $this->forwarder->getStrategies());
     }
 
-    public function test_can_get_and_set_exception_handler()
-    {
-        $this->forwarder->setExceptionHandler($expected = new TestExceptionHandler());
-
-        $this->assertEquals($expected, $this->forwarder->getExceptionHandler());
-    }
-
     public function test_can_get_and_set_forward_strategy()
     {
         $this->forwarder->setStrategy(TestInteraction::class, $expected = TestForwardStrategy::class);
 
         $this->assertEquals($expected, $this->forwarder->getStrategy(TestInteraction::class));
+    }
+
+    public function test_can_clear_interceptors()
+    {
+        $forwarder = invade($this->forwarder);
+g
+        $forwarder->interceptors = [
+            new TestInterceptor()
+        ];
+
+        $this->forwarder->clearInterceptors();
+
+        $this->assertEmpty($forwarder->interceptors);
     }
 
 }

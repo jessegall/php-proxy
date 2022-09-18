@@ -17,9 +17,9 @@ class ClosureInterceptor implements Intercepts
         $this->closure = $closure;
     }
 
-    public function intercept(Interacts $interaction, object $interactor = null): void
+    public function intercept(Interacts $interaction, object $caller = null): void
     {
-        ($this->closure)($interaction);
+        ($this->closure)($interaction, $caller);
     }
 
     public function getClosure(): Closure

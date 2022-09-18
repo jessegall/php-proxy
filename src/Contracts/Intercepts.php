@@ -7,6 +7,11 @@ use JesseGall\Proxy\Interactions\Contracts\Interacts;
 interface Intercepts
 {
 
-    public function intercept(Interacts $interaction, object $interactor = null): void;
+    /**
+     * @param Interacts $interaction
+     * @param object|null $caller
+     * @return void
+     */
+    public function intercept(Interacts $interaction, object $caller = null): void;
 
 }

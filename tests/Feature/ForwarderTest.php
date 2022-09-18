@@ -64,24 +64,5 @@ class ForwarderTest extends TestCase
         $this->assertEquals('expected', $concluded->getResult());
     }
 
-    public function test_exception_is_correctly_passed_on_to_handler()
-    {
-        $forwarder = $this->createPartialMock(TestForwarder::class, ['newStrategy']);
-
-        $forwarder->setExceptionHandler($handler = $this->createMock(ExceptionHandler::class));
-
-        $forwarder->method('newStrategy')->willReturn(
-            $strategy = new TestForwardStrategy($interaction = new TestInteraction())
-        );
-
-        $strategy->setDoExecute(fn() => throw new TestException());
-
-        $handler->expects($this->once())->method('handle')->with(
-            new ExecutionException($strategy, new TestException())
-        );
-
-        $forwarder->forward($interaction);
-    }
-
 
 }

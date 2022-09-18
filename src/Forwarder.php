@@ -3,6 +3,7 @@
 namespace JesseGall\Proxy;
 
 use Closure;
+use Exception;
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Contracts\Intercepts;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
@@ -25,7 +26,7 @@ class Forwarder
     /**
      * Mapping of the forward strategies.
      *
-     * @var array<class-string<Interaction>, class-string<ForwardStrategy>>
+     * @var array<class-string<\JesseGall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>>
      */
     protected array $strategies = [
         CallInteraction::class => CallStrategy::class,
@@ -48,29 +49,17 @@ class Forwarder
     protected array $exceptionHandlers = [];
 
     /**
-     * The exception handler.
-     *
-     * @var ExceptionHandler
-     */
-    protected ExceptionHandler $exceptionHandler;
-
-    public function __construct()
-    {
-        $this->exceptionHandler = new ExceptionHandler();
-    }
-
-    /**
      * Forward the interaction to the target and return concluded interaction.
      * Before forwarding notify interceptors about the interaction.
      * Cancel forwarding when the status is not pending.
      *
      * @param Interaction $interaction
-     * @param object|null $interactor
+     * @param object|null $caller
      * @return ConcludedInteraction
      */
-    public function forward(Interacts $interaction, object $interactor = null): ConcludedInteraction
+    public function forward(Interacts $interaction, object $caller = null): ConcludedInteraction
     {
-        $this->notifyInterceptors($interaction, $interactor);
+        $this->notifyInterceptors($interaction, $caller);
 
         // Interceptors might change the status of the interaction.
         // That's why we check if the status is still pending after the interceptors are notified.
@@ -103,14 +92,32 @@ class Forwarder
         try {
             $strategy->execute();
         } catch (ExecutionException $exception) {
-            $this->exceptionHandler->handle($exception);
+            $this->handleException($exception);
+        }
+    }
+
+    /**
+     * @param ExecutionException $exception
+     * @return void
+     * @throws Exception
+     */
+    protected function handleException(ExecutionException $exception): void
+    {
+        $interaction = $exception->getStrategy()->getInteraction();
+
+        $interaction->setStatus(Status::FAILED);
+
+        $this->callExceptionHandlers($exception);
+
+        if ($exception->shouldThrow()) {
+            throw $exception->getException();
         }
     }
 
     /**
      * Register an interceptor.
      *
-     * @param Intercepts|Closure|class-string<Intercepts>|Closure[]|class-string<Intercepts>[] $interceptor
+     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Contracts\Intercepts>[] $interceptor
      * @return void
      */
     public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
@@ -147,7 +154,7 @@ class Forwarder
      * @return ForwardStrategy
      * @throws ForwardStrategyMissingException
      */
-    protected function newStrategy(Interaction $interaction): ForwardStrategy
+    protected function newStrategy(Interacts $interaction): ForwardStrategy
     {
         $type = $this->getStrategy(get_class($interaction));
 
@@ -161,13 +168,27 @@ class Forwarder
     /**
      * Notify interceptors about an incoming interaction.
      *
-     * @param Interaction $interaction
+     * @param Interacts $interaction
+     * @param object|null $caller
      * @return void
      */
-    protected function notifyInterceptors(Interaction $interaction, object $interactor = null): void
+    protected function notifyInterceptors(Interacts $interaction, object $caller = null): void
     {
         foreach ($this->interceptors as $interceptor) {
-            $interceptor->intercept($interaction, $interactor);
+            $interceptor->intercept($interaction, $caller);
+        }
+    }
+
+    /**
+     * Calls the registered exception handlers
+     *
+     * @param ExecutionException $exception
+     * @return void
+     */
+    protected function callExceptionHandlers(ExecutionException $exception): void
+    {
+        foreach ($this->exceptionHandlers as $handler) {
+            $handler->handle($exception);
         }
     }
 
@@ -232,25 +253,6 @@ class Forwarder
     public function setStrategy(string $interaction, string $strategy): static
     {
         $this->strategies[$interaction] = $strategy;
-
-        return $this;
-    }
-
-    /**
-     * @return ExceptionHandler
-     */
-    public function getExceptionHandler(): ExceptionHandler
-    {
-        return $this->exceptionHandler;
-    }
-
-    /**
-     * @param ExceptionHandler $exceptionHandler
-     * @return Forwarder
-     */
-    public function setExceptionHandler(ExceptionHandler $exceptionHandler): static
-    {
-        $this->exceptionHandler = $exceptionHandler;
 
         return $this;
     }

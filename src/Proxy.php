@@ -145,7 +145,7 @@ class Proxy implements \ArrayAccess
         if ($this->useCache && $this->hasCached($interaction)) {
             $concluded = $this->getCached($interaction);
         } else {
-            $concluded = $this->forwarder->forward($interaction, $this->getInteractor());
+            $concluded = $this->forwarder->forward($interaction, $this->getCaller());
         }
 
         $this->logInteraction($concluded);
@@ -225,11 +225,11 @@ class Proxy implements \ArrayAccess
     }
 
     /**
-     * Returns the interactor
+     * Returns the object that called the interaction
      *
      * @return object|null
      */
-    protected function getInteractor(): ?object
+    protected function getCaller(): ?object
     {
         foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 10) as $trace) {
             $object = $trace['object'] ?? null;
