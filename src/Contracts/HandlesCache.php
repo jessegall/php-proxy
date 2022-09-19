@@ -8,7 +8,7 @@ use JesseGall\Proxy\Interactions\Contracts\Interacts;
 interface HandlesCache
 {
 
-    public function store(ConcludedInteraction $concluded): void;
+    public function store(ConcludedInteraction $concluded): bool;
 
     public function get(Interacts $interaction): ConcludedInteraction;
 

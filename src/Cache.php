@@ -4,16 +4,17 @@ namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Contracts\HandlesCache;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Interaction;
 
 class Cache implements HandlesCache
 {
 
     protected array $interactions = [];
 
-    public function store(ConcludedInteraction $concluded): void
+    public function store(ConcludedInteraction $concluded): bool
     {
         $this->interactions[$concluded->getInteraction()->toHash()] = $concluded;
+
+        return true;
     }
 
     public function get(Interacts $interaction): ConcludedInteraction
