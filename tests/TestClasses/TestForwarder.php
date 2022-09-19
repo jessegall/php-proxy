@@ -10,9 +10,9 @@ use JesseGall\Proxy\Strategies\ForwardStrategy;
 class TestForwarder extends Forwarder
 {
 
-    public function newStrategy(Interacts $interaction): ForwardStrategy
+    public function newStrategy(Interacts $interaction, object $caller = null): ForwardStrategy
     {
-        return parent::newStrategy($interaction);
+        return parent::newStrategy($interaction, $caller);
     }
 
     public function tryExecuting(ForwardStrategy $strategy): void

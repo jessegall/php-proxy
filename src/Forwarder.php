@@ -68,7 +68,7 @@ class Forwarder
             return new ConcludedInteraction($interaction, $caller);
         }
 
-        $strategy = $this->newStrategy($interaction);
+        $strategy = $this->newStrategy($interaction, $caller);
 
         $this->tryExecuting($strategy);
 
@@ -162,10 +162,10 @@ class Forwarder
      * Create a new forward strategy for the given interaction.
      *
      * @param Interaction $interaction
+     * @param object|null $caller
      * @return ForwardStrategy
-     * @throws ForwardStrategyMissingException
      */
-    protected function newStrategy(Interacts $interaction): ForwardStrategy
+    protected function newStrategy(Interacts $interaction, object $caller = null): ForwardStrategy
     {
         $type = $this->getStrategy(get_class($interaction));
 
@@ -173,7 +173,7 @@ class Forwarder
             throw new ForwardStrategyMissingException($interaction);
         }
 
-        return new $type($interaction);
+        return new $type($interaction, $caller);
     }
 
     /**
@@ -246,8 +246,8 @@ class Forwarder
     /**
      * Get the strategy for a specific interaction type
      *
-     * @param class-string<Intercepts> $interception
-     * @return string|null
+     * @param class-string<\JesseGall\Proxy\Contracts\Intercepts> $interception
+     * @return class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>|null
      */
     public function getStrategy(string $interception): ?string
     {

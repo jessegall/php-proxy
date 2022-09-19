@@ -26,11 +26,19 @@ abstract class ForwardStrategy
     protected mixed $result = null;
 
     /**
+     * The caller of the interaction
+     *
+     * @var object|null
+     */
+    private ?object $caller;
+
+    /**
      * @param T $interaction
      */
-    public function __construct(Interacts $interaction)
+    public function __construct(Interacts $interaction, object $caller = null)
     {
         $this->interaction = $interaction;
+        $this->caller = $caller;
     }
 
     /**
@@ -63,6 +71,14 @@ abstract class ForwardStrategy
     public function getInteraction(): Interacts
     {
         return $this->interaction;
+    }
+
+    /**
+     * @return object|null
+     */
+    public function getCaller(): ?object
+    {
+        return $this->caller;
     }
 
     /**
