@@ -30,7 +30,7 @@ abstract class ForwardStrategy
      *
      * @var object|null
      */
-    private ?object $caller;
+    protected ?object $caller;
 
     /**
      * @param T $interaction

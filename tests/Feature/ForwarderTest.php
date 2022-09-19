@@ -2,13 +2,10 @@
 
 namespace Test\Feature;
 
-use JesseGall\Proxy\ExceptionHandler;
 use JesseGall\Proxy\Forwarder;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Status;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 use PHPUnit\Framework\TestCase;
-use Test\TestClasses\TestException;
 use Test\TestClasses\TestForwarder;
 use Test\TestClasses\TestForwardStrategy;
 use Test\TestClasses\TestInteraction;

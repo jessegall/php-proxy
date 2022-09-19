@@ -11,9 +11,9 @@ use JesseGall\Proxy\Interactions\GetInteraction;
 class GetStrategy extends ForwardStrategy
 {
 
-    public function __construct(InteractsWithProperty $interaction)
+    public function __construct(InteractsWithProperty $interaction, object $caller = null)
     {
-        parent::__construct($interaction);
+        parent::__construct($interaction, $caller);
     }
 
     protected function doExecute(): mixed

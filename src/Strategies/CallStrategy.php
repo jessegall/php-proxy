@@ -11,9 +11,9 @@ use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
 class CallStrategy extends ForwardStrategy
 {
 
-    public function __construct(InteractsWithMethod $interaction)
+    public function __construct(InteractsWithMethod $interaction, object $caller = null)
     {
-        parent::__construct($interaction);
+        parent::__construct($interaction, $caller);
     }
 
     protected function doExecute(): mixed

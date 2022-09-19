@@ -12,9 +12,9 @@ use JesseGall\Proxy\Interactions\SetInteraction;
 class SetStrategy extends ForwardStrategy
 {
 
-    public function __construct(InteractsWithProperty $interaction)
+    public function __construct(InteractsWithProperty $interaction, object $caller = null)
     {
-        parent::__construct($interaction);
+        parent::__construct($interaction, $caller);
     }
 
     protected function doExecute(): void
