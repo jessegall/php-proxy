@@ -3,29 +3,26 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Contracts\HandlesCache;
+use JesseGall\Proxy\Interactions\Contracts\Interacts;
+use JesseGall\Proxy\Interactions\Interaction;
 
 class Cache implements HandlesCache
 {
 
-    /**
-     * The concluded interactions
-     *
-     * @var ConcludedInteraction[]
-     */
     protected array $interactions = [];
 
-    public function put(string $key, ConcludedInteraction $interaction)
+    public function store(ConcludedInteraction $concluded): void
     {
-        $this->interactions[$key] = $interaction;
+        $this->interactions[$concluded->getInteraction()->toHash()] = $concluded;
     }
 
-    public function get(string $key): ConcludedInteraction
+    public function get(Interacts $interaction): ConcludedInteraction
     {
-        return $this->interactions[$key];
+        return $this->interactions[$interaction->toHash()];
     }
 
-    public function has(string $key): bool
+    public function has(Interacts $interaction): bool
     {
-        return array_key_exists($key, $this->interactions);
+        return array_key_exists($interaction->toHash(), $this->interactions);
     }
 }

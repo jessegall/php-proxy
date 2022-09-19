@@ -41,7 +41,7 @@ class Proxy implements \ArrayAccess
      *
      * @var bool
      */
-    protected bool $useCache;
+    protected bool $cacheEnabled;
 
     /**
      * @var Cache
@@ -70,7 +70,7 @@ class Proxy implements \ArrayAccess
         $this->target = is_object($target) ? $target : new TargetArray($target);
         $this->parent = null;
         $this->decorateMode = DecorateMode::EQUALS;
-        $this->useCache = true;
+        $this->cacheEnabled = true;
         $this->cache = new Cache();
         $this->forwarder = new Forwarder();
         $this->history = [];
@@ -141,14 +141,12 @@ class Proxy implements \ArrayAccess
      */
     protected function processInteraction(Interacts $interaction): mixed
     {
-        $hash = $interaction->toHash();
-
-        if ($this->useCache && $this->cache->has($hash)) {
-            $concluded = $this->cache->get($hash);
+        if ($this->cacheEnabled && $this->cache->has($interaction)) {
+            $concluded = $this->cache->get($interaction);
         } else {
             $concluded = $this->forwarder->forward($interaction, $this->getCaller());
 
-            $this->cache->put($hash, $concluded);
+            $this->cache->store($concluded);
         }
 
         $this->logInteraction($concluded);
@@ -295,18 +293,18 @@ class Proxy implements \ArrayAccess
     /**
      * @return bool
      */
-    public function isUseCache(): bool
+    public function isCacheEnabled(): bool
     {
-        return $this->useCache;
+        return $this->cacheEnabled;
     }
 
     /**
-     * @param bool $useCache
+     * @param bool $cacheEnabled
      * @return Proxy
      */
-    public function setUseCache(bool $useCache): Proxy
+    public function setCacheEnabled(bool $cacheEnabled): Proxy
     {
-        $this->useCache = $useCache;
+        $this->cacheEnabled = $cacheEnabled;
 
         return $this;
     }
