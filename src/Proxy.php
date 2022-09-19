@@ -146,7 +146,7 @@ class Proxy implements \ArrayAccess
         } else {
             $concluded = $this->forwarder->forward($interaction, $this->getCaller());
 
-            $this->cache->store($concluded);
+            $this->cache->put($concluded);
         }
 
         $this->logInteraction($concluded);

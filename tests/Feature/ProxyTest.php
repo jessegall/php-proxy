@@ -180,7 +180,7 @@ class ProxyTest extends TestCase
     {
         $concluded = new ConcludedInteraction(new TestInteractionWithResult($expected = 'expected'));
 
-        $this->proxy->getCache()->store($concluded);
+        $this->proxy->getCache()->put($concluded);
 
         $this->proxy->setForwarder($forwarder = $this->createMock(TestForwarder::class));
 

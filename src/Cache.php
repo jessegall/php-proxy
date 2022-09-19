@@ -10,7 +10,7 @@ class Cache implements HandlesCache
 
     protected array $interactions = [];
 
-    public function store(ConcludedInteraction $concluded): bool
+    public function put(ConcludedInteraction $concluded): bool
     {
         $this->interactions[$concluded->getInteraction()->toHash()] = $concluded;
 
