@@ -138,6 +138,17 @@ class Forwarder
     }
 
     /**
+     * Register an exception handler
+     *
+     * @param HandlesFailedStrategies $handler
+     * @return void
+     */
+    public function registerExceptionHandler(HandlesFailedStrategies $handler): void
+    {
+        $this->exceptionHandlers[] = $handler;
+    }
+
+    /**
      * Removes all the interceptors
      *
      * @return void
