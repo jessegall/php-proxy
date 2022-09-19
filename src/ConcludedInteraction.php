@@ -27,12 +27,20 @@ class ConcludedInteraction
     protected readonly float $timestamp;
 
     /**
+     * The caller of the interaction
+     *
+     * @var object|null
+     */
+    private ?object $caller;
+
+    /**
      * @param T $interaction
      */
-    public function __construct(Interacts $interaction)
+    public function __construct(Interacts $interaction, object $caller = null)
     {
         $this->interaction = $interaction;
         $this->timestamp = microtime(true);
+        $this->caller = $caller;
     }
 
     /**
@@ -44,11 +52,11 @@ class ConcludedInteraction
     }
 
     /**
-     * @return float
+     * @return object|null
      */
-    public function getTimestamp(): float
+    public function getCaller(): ?object
     {
-        return $this->timestamp;
+        return $this->caller;
     }
 
     /**
@@ -65,6 +73,14 @@ class ConcludedInteraction
     public function getStatus(): Status
     {
         return $this->interaction->getStatus();
+    }
+
+    /**
+     * @return float
+     */
+    public function getTimestamp(): float
+    {
+        return $this->timestamp;
     }
 
     /**

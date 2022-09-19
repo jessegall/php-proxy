@@ -65,7 +65,7 @@ class Forwarder
         // That's why we check if the status is still pending after the interceptors are notified.
         // In the case that the interaction no longer has status pending, we skip the forwarding and return.
         if (! $interaction->hasStatus(Status::PENDING)) {
-            return new ConcludedInteraction($interaction);
+            return new ConcludedInteraction($interaction, $caller);
         }
 
         $strategy = $this->newStrategy($interaction);
@@ -78,7 +78,7 @@ class Forwarder
 
         $interaction->setStatus(Status::FULFILLED);
 
-        return new ConcludedInteraction($interaction);
+        return new ConcludedInteraction($interaction, $caller);
     }
 
     /**
