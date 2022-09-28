@@ -39,6 +39,17 @@ class ExecutionException extends Exception
     }
 
     /**
+     * @param Exception $exception
+     * @return ExecutionException
+     */
+    public function setException(Exception $exception): ExecutionException
+    {
+        $this->exception = $exception;
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function shouldThrow(): bool
@@ -53,6 +64,7 @@ class ExecutionException extends Exception
     public function setShouldThrow(bool $throw): ExecutionException
     {
         $this->shouldThrow = $throw;
+
         return $this;
     }
 

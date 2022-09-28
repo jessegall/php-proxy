@@ -26,4 +26,9 @@ class Cache implements HandlesCache
     {
         return array_key_exists($interaction->toHash(), $this->interactions);
     }
+
+    public function clear(): void
+    {
+        $this->interactions = [];
+    }
 }

@@ -14,4 +14,6 @@ interface HandlesCache
 
     public function has(Interacts $interaction): bool;
 
+    public function clear(): void;
+
 }
