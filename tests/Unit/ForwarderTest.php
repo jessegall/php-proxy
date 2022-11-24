@@ -2,8 +2,6 @@
 
 namespace Test\Unit;
 
-use JesseGall\Invader\Invader;
-use JesseGall\Proxy\ClosureInterceptor;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Forwarder;
 use PHPUnit\Framework\TestCase;
@@ -36,10 +34,7 @@ class ForwarderTest extends TestCase
     {
         $this->forwarder->registerInterceptor(TestInterceptor::class);
 
-        $this->assertContains(
-            TestInterceptor::class,
-            array_map(fn($i) => get_class($i), $this->forwarder->getInterceptors())
-        );
+        $this->assertCount(1, $this->forwarder->getInterceptors());
     }
 
     public function test_interceptor_can_be_registered_with_an_array_of_class_strings()
@@ -51,23 +46,13 @@ class ForwarderTest extends TestCase
         ]);
 
         $this->assertCount(3, $this->forwarder->getInterceptors());
-
-        foreach ($this->forwarder->getInterceptors() as $interceptor) {
-            $this->assertEquals(TestInterceptor::class, get_class($interceptor));
-        }
     }
 
     public function test_interceptor_can_be_registered_with_a_closure()
     {
-        $this->forwarder->registerInterceptor($closure = function () { });
+        $this->forwarder->registerInterceptor(fn() => null);
 
         $this->assertCount(1, $this->forwarder->getInterceptors());
-
-        $interceptor = $this->forwarder->getInterceptors()[0];
-
-        $this->assertInstanceOf(ClosureInterceptor::class, $interceptor);
-
-        $this->assertEquals($closure, $interceptor->getClosure());
     }
 
     public function test_expected_strategy_is_returned()
@@ -109,15 +94,48 @@ class ForwarderTest extends TestCase
 
     public function test_can_clear_interceptors()
     {
-        $forwarder = invade($this->forwarder);
-
-        $forwarder->interceptors = [
+        $this->forwarder->setInterceptors([
             new TestInterceptor()
-        ];
+        ]);
 
         $this->forwarder->clearInterceptors();
 
-        $this->assertEmpty($forwarder->interceptors);
+        $this->assertEmpty($this->forwarder->getInterceptors());
+    }
+
+    public function test_exception_handler_can_be_registered()
+    {
+        $this->forwarder->registerExceptionHandler(new TestExceptionHandler());
+
+        $this->assertCount(1, $this->forwarder->getExceptionHandlers());
+    }
+
+    public function test_exception_handlers_can_be_registered_with_and_array_of_exception_handlers()
+    {
+        $this->forwarder->registerExceptionHandler([
+            new TestExceptionHandler(),
+            new TestExceptionHandler()
+        ]);
+
+        $this->assertCount(2, $this->forwarder->getExceptionHandlers());
+    }
+
+    public function test_can_clear_exception_handlers()
+    {
+        $this->forwarder->setExceptionHandlers([
+            new TestExceptionHandler()
+        ]);
+
+        $this->forwarder->clearExceptionHandlers();
+
+        $this->assertCount(0, $this->forwarder->getExceptionHandlers());
+    }
+
+    public function test_can_get_and_set_exception_handlers()
+    {
+        $this->forwarder->setExceptionHandlers($expected = [new TestExceptionHandler()]);
+
+        $this->assertEquals($expected, $this->forwarder->getExceptionHandlers());
     }
 
 }

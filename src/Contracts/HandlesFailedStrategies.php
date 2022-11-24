@@ -7,6 +7,6 @@ use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 interface HandlesFailedStrategies
 {
 
-    public function handle(ExecutionException $exception);
+    public function handle(ExecutionException $exception): void;
 
 }

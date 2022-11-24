@@ -2,11 +2,10 @@
 
 namespace JesseGall\Proxy\Strategies;
 
-use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
 
 /**
- * @extends ForwardStrategy<CallInteraction>
+ * @extends ForwardStrategy<\JesseGall\Proxy\Interactions\CallInteraction>
  */
 class CallStrategy extends ForwardStrategy
 {

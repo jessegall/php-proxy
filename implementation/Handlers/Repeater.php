@@ -21,7 +21,7 @@ class Repeater implements HandlesFailedStrategies
     /**
      * @throws MaxAttemptsExceededException
      */
-    public function handle(ExecutionException $exception)
+    public function handle(ExecutionException $exception): void
     {
         while (true) {
             ++$this->attempts;

@@ -82,6 +82,74 @@ class Forwarder
     }
 
     /**
+     * Register an interceptor.
+     *
+     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Contracts\Intercepts>[] $interceptor
+     * @return void
+     */
+    public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
+    {
+        $this->registerItems($interceptor, ClosureInterceptor::class, $this->interceptors);
+    }
+
+    /**
+     * Removes all the interceptors
+     *
+     * @return void
+     */
+    public function clearInterceptors(): void
+    {
+        $this->interceptors = [];
+    }
+
+    /**
+     * Register an exception handler.
+     *
+     * @param HandlesFailedStrategies|Closure|class-string<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>|Closure[]|class-string<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>[] $handler
+     * @return void
+     */
+    public function registerExceptionHandler(HandlesFailedStrategies|Closure|string|array $handler): void
+    {
+        $this->registerItems($handler, ClosureHandler::class, $this->exceptionHandlers);
+    }
+
+    /**
+     * Removes all the exception handlers
+     *
+     * @return void
+     */
+    public function clearExceptionHandlers(): void
+    {
+        $this->exceptionHandlers = [];
+    }
+
+    /**
+     * Register an item with the target
+     * If an item is a closure, wrap the closure in the given delegate class
+     *
+     * @param mixed $items
+     * @param class-string<\JesseGall\Proxy\ClosureDelegate> $delegate
+     * @param array $target
+     * @return void
+     */
+    protected function registerItems(mixed $items, string $delegate, array &$target): void
+    {
+        if (! is_array($items)) {
+            $items = [$items];
+        }
+
+        foreach ($items as $item) {
+            if ($item instanceof Closure) {
+                $item = new $delegate($item);
+            } elseif (is_string($item)) {
+                $item = new $item;
+            }
+
+            $target[] = $item;
+        }
+    }
+
+    /**
      * Try to execute the given strategy.
      * Forwards any thrown exceptions to the exception handler.
      *
@@ -112,50 +180,6 @@ class Forwarder
         if ($exception->shouldThrow()) {
             throw $exception->getException();
         }
-    }
-
-    /**
-     * Register an interceptor.
-     *
-     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Contracts\Intercepts>[] $interceptor
-     * @return void
-     */
-    public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
-    {
-        if (! is_array($interceptor)) {
-            $interceptor = [$interceptor];
-        }
-
-        foreach ($interceptor as $item) {
-            if ($item instanceof Closure) {
-                $item = new ClosureInterceptor($item);
-            } elseif (is_string($item)) {
-                $item = new $item;
-            }
-
-            $this->interceptors[] = $item;
-        }
-    }
-
-    /**
-     * Register an exception handler
-     *
-     * @param HandlesFailedStrategies $handler
-     * @return void
-     */
-    public function registerExceptionHandler(HandlesFailedStrategies $handler): void
-    {
-        $this->exceptionHandlers[] = $handler;
-    }
-
-    /**
-     * Removes all the interceptors
-     *
-     * @return void
-     */
-    public function clearInterceptors(): void
-    {
-        $this->interceptors = [];
     }
 
     /**
@@ -225,7 +249,7 @@ class Forwarder
     }
 
     /**
-     * @return array<class-string<Interaction>, class-string<ForwardStrategy>>
+     * @return array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>>
      */
     public function getStrategies(): array
     {
@@ -233,7 +257,7 @@ class Forwarder
     }
 
     /**
-     * @param array<class-string<Interaction>, class-string<ForwardStrategy>> $strategies
+     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>> $strategies
      * @return Forwarder
      */
     public function setStrategies(array $strategies): static
@@ -257,13 +281,36 @@ class Forwarder
     /**
      * Sets a strategy for a specific interaction type
      *
-     * @param callable-string<Intercepts> $interaction
-     * @param class-string<ForwardStrategy> $strategy
+     * @param callable-string<\JesseGall\Proxy\Contracts\Intercepts> $interaction
+     * @param class-string<\JesseGall\Proxy\Strategies\ForwardStrategy> $strategy
      * @return $this
      */
     public function setStrategy(string $interaction, string $strategy): static
     {
         $this->strategies[$interaction] = $strategy;
+
+        return $this;
+    }
+
+    /**
+     * Get the registered exception handlers
+     *
+     * @return array
+     */
+    public function getExceptionHandlers(): array
+    {
+        return $this->exceptionHandlers;
+    }
+
+    /**
+     * Set the exception handlers
+     *
+     * @param array $exceptionHandlers
+     * @return Forwarder
+     */
+    public function setExceptionHandlers(array $exceptionHandlers): Forwarder
+    {
+        $this->exceptionHandlers = $exceptionHandlers;
 
         return $this;
     }
