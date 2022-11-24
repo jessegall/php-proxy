@@ -253,39 +253,6 @@ class Forwarder
     }
 
     /**
-     * @return array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Forwarder\Strategies\Strategy>>
-     */
-    public function getFactories(): array
-    {
-        return $this->factories;
-    }
-
-    /**
-     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, Closure> $factories
-     * @return Forwarder
-     */
-    public function setFactories(array $factories): static
-    {
-        $this->factories = $factories;
-
-        return $this;
-    }
-
-    /**
-     * Sets a strategy for a specific interaction type
-     *
-     * @param callable-string<\JesseGall\Proxy\Contracts\Intercepts> $interaction
-     * @param StrategyFactory $factory
-     * @return $this
-     */
-    public function registerStrategyFactory(string $interaction, StrategyFactory $factory): static
-    {
-        $this->factories[$interaction] = $factory;
-
-        return $this;
-    }
-
-    /**
      * Get the registered exception handlers
      *
      * @return array
