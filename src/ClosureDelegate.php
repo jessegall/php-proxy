@@ -1,13 +1,14 @@
 <?php
 
-namespace JesseGall\Proxy\Forwarder;
+namespace JesseGall\Proxy;
 
 use Closure;
+use JesseGall\Proxy\Contracts\Handler;
 
 /**
  * @template T
  */
-class ClosureDelegate
+class ClosureDelegate implements Handler
 {
 
     private Closure $closure;
@@ -21,7 +22,7 @@ class ClosureDelegate
      * @param mixed ...$args
      * @return T
      */
-    public function call(mixed ...$args)
+    public function handle(mixed ...$args)
     {
         return ($this->closure)(...$args);
     }

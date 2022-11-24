@@ -2,9 +2,10 @@
 
 namespace JesseGall\Proxy\Forwarder\Contracts;
 
+use JesseGall\Proxy\Contracts\Handler;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 
-interface Intercepts
+interface Intercepts extends Handler
 {
 
     /**
@@ -12,6 +13,6 @@ interface Intercepts
      * @param object|null $caller
      * @return void
      */
-    public function intercept(Interacts $interaction, object $caller = null): void;
+    public function handle(Interacts $interaction, object $caller = null): void;
 
 }

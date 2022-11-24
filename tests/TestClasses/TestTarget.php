@@ -2,7 +2,7 @@
 
 namespace Tests\TestClasses;
 
-class TestSubject
+class TestTarget
 {
 
     public string $property = 'value';
@@ -23,9 +23,9 @@ class TestSubject
         throw new TestException();
     }
 
-    public function getChild(): TestSubject
+    public function getChild(): TestTarget
     {
-        return new TestSubject();
+        return new TestTarget();
     }
 
 }

@@ -11,46 +11,46 @@ use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Status;
 use JesseGall\Proxy\Proxy;
 use Tests\TestClasses\TestException;
-use Tests\TestClasses\TestSubject;
+use Tests\TestClasses\TestTarget;
 
 class ProxyTest extends TestCase
 {
 
-    private TestSubject $subject;
+    private TestTarget $target;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->subject = new TestSubject();
+        $this->target = new TestTarget();
     }
 
     public function test_can_get_property_through_proxy()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $this->assertEquals('value', $proxy->property);
     }
 
     public function test_can_set_property_through_proxy()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->property = 'new value';
 
-        $this->assertEquals('new value', $this->subject->property);
+        $this->assertEquals('new value', $this->target->property);
     }
 
     public function test_can_invoke_method_through_proxy()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $this->assertEquals('value', $proxy->method());
     }
 
     public function test_interceptor_will_intercept_call_interaction()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $intercepted = false;
 
@@ -65,7 +65,7 @@ class ProxyTest extends TestCase
 
     public function test_interceptor_will_intercept_get_interaction()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $intercepted = false;
 
@@ -80,7 +80,7 @@ class ProxyTest extends TestCase
 
     public function test_interceptor_will_intercept_set_interaction()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $intercepted = false;
 
@@ -95,7 +95,7 @@ class ProxyTest extends TestCase
 
     public function test_interceptor_can_cancel_interaction()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->getForwarder()->registerInterceptor(function (Interacts $interaction) {
             $interaction->setStatus(Status::CANCELLED);
@@ -103,12 +103,12 @@ class ProxyTest extends TestCase
 
         $proxy->method();
 
-        $this->assertEquals(0, $this->subject->called);
+        $this->assertEquals(0, $this->target->called);
     }
 
     public function test_exception_handler_will_catch_exception()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $caught = false;
 
@@ -125,7 +125,7 @@ class ProxyTest extends TestCase
 
     public function test_exception_handler_can_cancel_exception()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->getForwarder()->registerExceptionHandler(function (ExecutionException $exception) {
             $exception->setShouldThrow(false);
@@ -138,7 +138,7 @@ class ProxyTest extends TestCase
 
     public function test_interactions_will_be_retrieved_from_cache_when_cached()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->setCacheEnabled(true);
 
@@ -155,7 +155,7 @@ class ProxyTest extends TestCase
 
     public function test_interactions_will_not_be_cached_when_cache_is_disabled()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->setCacheEnabled(false);
 
@@ -168,7 +168,7 @@ class ProxyTest extends TestCase
 
     public function test_interactions_are_logged()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->property = 'new value';
         $proxy->method();
@@ -180,7 +180,7 @@ class ProxyTest extends TestCase
 
     public function test_result_is_wrapped_in_proxy_when_value_is_object()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->setDecorateMode(DecorateMode::ALWAYS);
 
@@ -191,7 +191,7 @@ class ProxyTest extends TestCase
 
     public function test_caller_is_correctly_set()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->method();
 
@@ -202,7 +202,7 @@ class ProxyTest extends TestCase
 
     public function test_exception_is_thrown_when_no_strategy_is_found()
     {
-        $proxy = new Proxy($this->subject);
+        $proxy = new Proxy($this->target);
 
         $proxy->getForwarder()->setFactory(new class extends StrategyFactory {
             public function make(Interacts $interaction, object $caller = null): ?Strategy
@@ -214,6 +214,21 @@ class ProxyTest extends TestCase
         $this->expectException(StrategyNullException::class);
 
         $proxy->method();
+    }
+
+    public function test_registered_listeners_are_called_when_interaction_is_concluded()
+    {
+        $proxy = new Proxy($this->target);
+
+        $called = false;
+
+        $proxy->registerListener(function () use (&$called) {
+            $called = true;
+        });
+
+        $proxy->method();
+
+        $this->assertTrue($called);
     }
 
 }

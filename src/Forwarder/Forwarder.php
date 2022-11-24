@@ -10,6 +10,7 @@ use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 use JesseGall\Proxy\Forwarder\Exceptions\StrategyNullException;
 use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Forwarder\Strategies\Strategy;
+use JesseGall\Proxy\HandlerContainer;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\WithResult;
 use JesseGall\Proxy\Interactions\Interaction;
@@ -28,23 +29,23 @@ class Forwarder
     /**
      * The registered interceptors.
      *
-     * @var Intercepts[]
+     * @var HandlerContainer<Intercepts>
      */
-    protected array $interceptors;
+    protected HandlerContainer $interceptors;
 
     /**
      * The registered exception handlers
      *
-     * @var HandlesFailedStrategies[]
+     * @var HandlerContainer<HandlesFailedStrategies>
      */
-    protected array $exceptionHandlers;
+    protected HandlerContainer $exceptionHandlers;
 
 
     public function __construct()
     {
         $this->factory = new StrategyFactory();
-        $this->interceptors = [];
-        $this->exceptionHandlers = [];
+        $this->interceptors = new HandlerContainer();
+        $this->exceptionHandlers = new HandlerContainer();
     }
 
     /**
@@ -58,7 +59,7 @@ class Forwarder
      */
     public function forward(Interacts $interaction, object $caller = null): ConcludedInteraction
     {
-        $this->notifyInterceptors($interaction, $caller);
+        $this->interceptors->call($interaction, $caller);
 
         // Interceptors might change the status of the interaction.
         // That's why we check if the status is still pending after the interceptors are notified.
@@ -85,69 +86,23 @@ class Forwarder
     /**
      * Register an interceptor.
      *
-     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Forwarder\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Forwarder\Contracts\Intercepts>[] $interceptor
+     * @param Intercepts|Closure|string|array $interceptor
      * @return void
      */
     public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
     {
-        $this->registerItems($interceptor, ClosureInterceptor::class, $this->interceptors);
-    }
-
-    /**
-     * Removes all the interceptors
-     *
-     * @return void
-     */
-    public function clearInterceptors(): void
-    {
-        $this->interceptors = [];
+        $this->interceptors->registerHandlers($interceptor);
     }
 
     /**
      * Register an exception handler.
      *
-     * @param HandlesFailedStrategies|Closure|class-string<\JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies>|Closure[]|class-string<\JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies>[] $handler
+     * @param HandlesFailedStrategies|Closure|string|array $handler
      * @return void
      */
     public function registerExceptionHandler(HandlesFailedStrategies|Closure|string|array $handler): void
     {
-        $this->registerItems($handler, ClosureHandler::class, $this->exceptionHandlers);
-    }
-
-    /**
-     * Removes all the exception handlers
-     *
-     * @return void
-     */
-    public function clearExceptionHandlers(): void
-    {
-        $this->exceptionHandlers = [];
-    }
-
-    /**
-     * Register an item with the target
-     * If an item is a closure, wrap the closure in the given delegate class
-     *
-     * @param mixed $items
-     * @param class-string<\JesseGall\Proxy\Forwarder\ClosureDelegate> $delegate
-     * @param array $target
-     * @return void
-     */
-    protected function registerItems(mixed $items, string $delegate, array &$target): void
-    {
-        if (! is_array($items)) {
-            $items = [$items];
-        }
-
-        foreach ($items as $item) {
-            if ($item instanceof Closure) {
-                $item = new $delegate($item);
-            } elseif (is_string($item)) {
-                $item = new $item;
-            }
-
-            $target[] = $item;
-        }
+        $this->exceptionHandlers->registerHandlers($handler);
     }
 
     /**
@@ -176,37 +131,10 @@ class Forwarder
 
         $interaction->setStatus(Status::FAILED);
 
-        $this->callExceptionHandlers($exception);
+        $this->exceptionHandlers->call($exception);
 
         if ($exception->shouldThrow()) {
             throw $exception->getException();
-        }
-    }
-
-    /**
-     * Notify interceptors about an incoming interaction.
-     *
-     * @param Interacts $interaction
-     * @param object|null $caller
-     * @return void
-     */
-    protected function notifyInterceptors(Interacts $interaction, object $caller = null): void
-    {
-        foreach ($this->interceptors as $interceptor) {
-            $interceptor->intercept($interaction, $caller);
-        }
-    }
-
-    /**
-     * Calls the registered exception handlers
-     *
-     * @param ExecutionException $exception
-     * @return void
-     */
-    protected function callExceptionHandlers(ExecutionException $exception): void
-    {
-        foreach ($this->exceptionHandlers as $handler) {
-            $handler->handle($exception);
         }
     }
 
@@ -232,18 +160,18 @@ class Forwarder
     }
 
     /**
-     * @return Intercepts[]
+     * @return HandlerContainer
      */
-    public function getInterceptors(): array
+    public function getInterceptors(): HandlerContainer
     {
         return $this->interceptors;
     }
 
     /**
-     * @param Intercepts[] $interceptors
-     * @return $this
+     * @param HandlerContainer $interceptors
+     * @return Forwarder
      */
-    public function setInterceptors(array $interceptors): static
+    public function setInterceptors(HandlerContainer $interceptors): Forwarder
     {
         $this->interceptors = $interceptors;
 
@@ -251,22 +179,18 @@ class Forwarder
     }
 
     /**
-     * Get the registered exception handlers
-     *
-     * @return array
+     * @return HandlerContainer
      */
-    public function getExceptionHandlers(): array
+    public function getExceptionHandlers(): HandlerContainer
     {
         return $this->exceptionHandlers;
     }
 
     /**
-     * Set the exception handlers
-     *
-     * @param array $exceptionHandlers
+     * @param HandlerContainer $exceptionHandlers
      * @return Forwarder
      */
-    public function setExceptionHandlers(array $exceptionHandlers): Forwarder
+    public function setExceptionHandlers(HandlerContainer $exceptionHandlers): Forwarder
     {
         $this->exceptionHandlers = $exceptionHandlers;
 

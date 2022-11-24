@@ -2,7 +2,10 @@
 
 namespace JesseGall\Proxy;
 
+use Closure;
 use JesseGall\Proxy\Contracts\HandlesCache;
+use JesseGall\Proxy\Contracts\Listener;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Forwarder\Forwarder;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -60,6 +63,11 @@ class Proxy
     protected Forwarder $forwarder;
 
     /**
+     * @var HandlerContainer<Listener>
+     */
+    protected HandlerContainer $listeners;
+
+    /**
      * The interaction history
      *
      * @var ConcludedInteraction[]
@@ -77,6 +85,7 @@ class Proxy
         $this->cacheEnabled = false;
         $this->cacheHandler = new Cache();
         $this->forwarder = new Forwarder();
+        $this->listeners = new HandlerContainer();
         $this->history = [];
     }
 
@@ -143,6 +152,8 @@ class Proxy
 
         $this->logInteraction($concluded);
 
+        $this->listeners->call($concluded);
+
         if ($concluded->getInteraction() instanceof WithResult) {
             return $this->decorateResult($concluded);
         }
@@ -173,6 +184,15 @@ class Proxy
         }
 
         return (new static($result))->setForwarder($this->forwarder)->setParent($this);
+    }
+
+    /**
+     * @param HandlesFailedStrategies|Closure|string|array $listener
+     * @return void
+     */
+    public function registerListener(HandlesFailedStrategies|Closure|string|array $listener): void
+    {
+        $this->listeners->registerHandlers($listener);
     }
 
     /**
