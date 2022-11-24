@@ -1,6 +1,6 @@
 <?php
 
-namespace JesseGall\Proxy\Contracts;
+namespace JesseGall\Proxy\Forwarder\Contracts;
 
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 

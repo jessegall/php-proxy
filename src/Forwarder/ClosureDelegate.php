@@ -1,6 +1,6 @@
 <?php
 
-namespace JesseGall\Proxy;
+namespace JesseGall\Proxy\Forwarder;
 
 use Closure;
 

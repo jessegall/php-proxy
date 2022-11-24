@@ -4,11 +4,9 @@ namespace JesseGall\Proxy\Forwarder;
 
 use Closure;
 use Exception;
-use JesseGall\Proxy\ClosureHandler;
-use JesseGall\Proxy\ClosureInterceptor;
 use JesseGall\Proxy\ConcludedInteraction;
-use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
-use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 use JesseGall\Proxy\Forwarder\Exceptions\StrategyNullException;
 use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Forwarder\Strategies\Strategy;
@@ -87,7 +85,7 @@ class Forwarder
     /**
      * Register an interceptor.
      *
-     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Contracts\Intercepts>[] $interceptor
+     * @param Intercepts|Closure|class-string<\JesseGall\Proxy\Forwarder\Contracts\Intercepts>|Closure[]|class-string<\JesseGall\Proxy\Forwarder\Contracts\Intercepts>[] $interceptor
      * @return void
      */
     public function registerInterceptor(Intercepts|Closure|string|array $interceptor): void
@@ -108,7 +106,7 @@ class Forwarder
     /**
      * Register an exception handler.
      *
-     * @param HandlesFailedStrategies|Closure|class-string<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>|Closure[]|class-string<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>[] $handler
+     * @param HandlesFailedStrategies|Closure|class-string<\JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies>|Closure[]|class-string<\JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies>[] $handler
      * @return void
      */
     public function registerExceptionHandler(HandlesFailedStrategies|Closure|string|array $handler): void
@@ -131,7 +129,7 @@ class Forwarder
      * If an item is a closure, wrap the closure in the given delegate class
      *
      * @param mixed $items
-     * @param class-string<\JesseGall\Proxy\ClosureDelegate> $delegate
+     * @param class-string<\JesseGall\Proxy\Forwarder\ClosureDelegate> $delegate
      * @param array $target
      * @return void
      */

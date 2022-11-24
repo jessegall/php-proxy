@@ -5,7 +5,6 @@ namespace JesseGall\Proxy;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Contracts\InvokesMethod;
 use JesseGall\Proxy\Interactions\Contracts\MutatesProperty;
-use JesseGall\Proxy\Interactions\Contracts\RetrievesAndModifiesProperty;
 use JesseGall\Proxy\Interactions\Contracts\RetrievesProperty;
 
 class InteractionHash

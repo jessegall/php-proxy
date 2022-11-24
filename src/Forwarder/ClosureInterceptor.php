@@ -1,12 +1,12 @@
 <?php
 
-namespace JesseGall\Proxy;
+namespace JesseGall\Proxy\Forwarder;
 
-use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 
 /**
- * @extends ClosureDelegate<\JesseGall\Proxy\Contracts\Intercepts>
+ * @extends ClosureDelegate<\JesseGall\Proxy\Forwarder\Contracts\Intercepts>
  */
 class ClosureInterceptor extends ClosureDelegate implements Intercepts
 {

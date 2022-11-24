@@ -4,15 +4,15 @@
         "psr-4": {
             "JesseGall\\Proxy\\": "src/",
             "JesseGall\\Proxy\\Implementation\\": "implementation/"
-        },
-        "files": [
-            "src/helpers.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        }
+        },
+        "files": [
+            "tests/helpers.php"
+        ]
     },
     "authors": [
         {

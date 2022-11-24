@@ -1,12 +1,12 @@
 <?php
 
-namespace JesseGall\Proxy;
+namespace JesseGall\Proxy\Forwarder;
 
-use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 
 /**
- * @extends ClosureDelegate<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>
+ * @extends ClosureDelegate<\JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies>
  */
 class ClosureHandler extends ClosureDelegate implements HandlesFailedStrategies
 {
