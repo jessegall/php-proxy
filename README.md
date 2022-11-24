@@ -10,6 +10,11 @@ composer require jessegall/proxy
 
 ## What can it do?
 
+1. [Cache interactions](#cache-interactions)
+    1. [Clear cache](#clear-cache)
+    2. [Custom cache handler](#custom-cache-handler)
+    3. [Interaction hash](#interaction-hash)
+
 ### Cache interactions
 
 By wrapping any object in a proxy you can easily enable cache for any interaction. This counts for method calls and
@@ -97,6 +102,8 @@ $proxy->setCacheHandler(new CustomCacheHandler());
 
 ```
 
+#### Interaction hash
+
 Each interaction has a unique hash that can be used to cache the interaction
 
 ```php
@@ -110,6 +117,7 @@ $hash = $interaction->toHash();
 Interceptors can be used to intercept any interaction with an object.
 
 #### Register with closure
+
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Proxy;
@@ -122,6 +130,7 @@ $proxy->getForwarder()->registerInterceptor(function (Interacts $interacts) {
 ```
 
 #### Register with class instance
+
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Proxy;
@@ -129,7 +138,8 @@ use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 
 class MyInterceptor implements Intercepts {
     
-    public function handle(Interacts $interaction, object $caller = null) {
+    public function handle(Interacts $interaction, object $caller = null): void 
+    {
         ...
     }
     
@@ -141,6 +151,7 @@ $proxy->getForwarder()->registerInterceptor(new MyInterceptor());
 ```
 
 #### Register with class string
+
 ```php
 use JesseGall\Proxy\Proxy;
 
@@ -150,8 +161,9 @@ $proxy->getForwarder()->registerInterceptor(MyInterceptor::class);
 ```
 
 #### Register multiple with an array
+
 ```php
-use \JesseGall\Proxy\Forwarder\Contracts\Intercepts;
+use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 use JesseGall\Proxy\Proxy;
 
 $proxy = new Proxy($target);
@@ -167,7 +179,7 @@ $proxy->getForwarder()->registerInterceptor([
 
 #### Example
 
-In this example an interceptor is used to log interactions 
+In this example an interceptor is used to log interactions
 
 ```php
 class Target
@@ -274,6 +286,7 @@ class ApiProxy extends Proxy
 Of course, it is also possible to simply throw an exception in the interceptor
 
 ```php
+use JesseGall\Proxy\Proxy;
 use JesseGall\Proxy\Interactions\Status;
 
 $proxy->registerInterceptor(function(Interacts $interaction) {
@@ -282,8 +295,71 @@ $proxy->registerInterceptor(function(Interacts $interaction) {
 })
 ```
 
-## Exception handlers
+---
+
+### Exception handlers
+
+Exceptions thrown by an interaction can be caught using exception handlers
+
+#### Register with closure
 
 ```php
-    Documentation WIP
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+
+$proxy = new Proxy($target);
+
+$proxy->getForwarder()->registerExceptionHandler(function (ExectionException $exception) {
+    ...
+});
+```
+
+#### Register with class instance
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
+
+class MyExceptionHandler implements HandlesFailedStrategies {
+
+    public function handle(ExecutionException $exception): void
+    {
+        ...
+    }
+
+}
+
+$proxy = new Proxy($target);
+
+$proxy->getForwarder()->registerExceptionHandler(new MyExceptionHandler());
+
+```
+
+#### Register with class string
+
+```php
+use JesseGall\Proxy\Proxy;
+
+$proxy = new Proxy($target);
+
+$proxy->getForwarder()->registerExceptionHandler(MyExceptionHandler::class);
+
+```
+
+#### Register multiple with an array
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+
+$proxy = new Proxy($target);
+
+$proxy->getForwarder()->registerExceptionHandler([
+    function (ExectionException $exception) {
+        ...
+    },
+    new MyExceptionHandler(),
+    MyExceptionHandler::class,
+]);
 ```
