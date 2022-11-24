@@ -13,7 +13,7 @@ enum DecorateMode
     /**
      * Only wrap the result in proxy when the value is the target
      */
-    case EQUALS;
+    case EQUALS_TARGET;
 
     /**
      * Always wrap the result in proxy when the value is an object

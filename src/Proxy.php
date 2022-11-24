@@ -81,7 +81,7 @@ class Proxy
     {
         $this->target = $target;
         $this->parent = null;
-        $this->decorateMode = DecorateMode::EQUALS;
+        $this->decorateMode = DecorateMode::EQUALS_TARGET;
         $this->cacheEnabled = false;
         $this->cacheHandler = new Cache();
         $this->forwarder = new Forwarder();
@@ -179,7 +179,7 @@ class Proxy
             return $result;
         }
 
-        if ($this->decorateMode === DecorateMode::EQUALS && $result !== $this->target) {
+        if ($this->decorateMode === DecorateMode::EQUALS_TARGET && $result !== $this->target) {
             return $result;
         }
 
