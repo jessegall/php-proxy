@@ -3,8 +3,8 @@
 namespace JesseGall\Proxy\Implementation\Handlers;
 
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Implementation\Handlers\Exceptions\MaxAttemptsExceededException;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 
 class Repeater implements HandlesFailedStrategies
 {

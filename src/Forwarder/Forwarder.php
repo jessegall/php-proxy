@@ -1,55 +1,52 @@
 <?php
 
-namespace JesseGall\Proxy;
+namespace JesseGall\Proxy\Forwarder;
 
 use Closure;
 use Exception;
+use JesseGall\Proxy\ClosureHandler;
+use JesseGall\Proxy\ClosureInterceptor;
+use JesseGall\Proxy\ConcludedInteraction;
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Contracts\Intercepts;
-use JesseGall\Proxy\Contracts\ResolvesForwardStrategy;
-use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
-use JesseGall\Proxy\Interactions\CallInteraction;
+use JesseGall\Proxy\Forwarder\Exceptions\StrategyNullException;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Strategies\Strategy;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
-use JesseGall\Proxy\Interactions\GetInteraction;
+use JesseGall\Proxy\Interactions\Contracts\WithResult;
 use JesseGall\Proxy\Interactions\Interaction;
-use JesseGall\Proxy\Interactions\SetInteraction;
 use JesseGall\Proxy\Interactions\Status;
-use JesseGall\Proxy\Strategies\CallStrategy;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
-use JesseGall\Proxy\Strategies\ForwardStrategy;
-use JesseGall\Proxy\Strategies\GetStrategy;
-use JesseGall\Proxy\Strategies\SetStrategy;
 
 class Forwarder
 {
 
     /**
-     * Mapping of the forward strategies.
+     * The strategy factory.
      *
-     * @var array<class-string<\JesseGall\Proxy\Interactions\Interaction>, ResolvesForwardStrategy>
+     * @var StrategyFactory
      */
-    protected array $strategyResolvers = [];
+    protected StrategyFactory $factory;
 
     /**
      * The registered interceptors.
      *
      * @var Intercepts[]
      */
-    protected array $interceptors = [];
+    protected array $interceptors;
 
     /**
      * The registered exception handlers
      *
      * @var HandlesFailedStrategies[]
      */
-    protected array $exceptionHandlers = [];
+    protected array $exceptionHandlers;
+
 
     public function __construct()
     {
-        $this->setStrategyResolver(CallInteraction::class, new ForwardStrategyResolver(CallStrategy::class));
-        $this->setStrategyResolver(GetInteraction::class, new ForwardStrategyResolver(GetStrategy::class));
-        $this->setStrategyResolver(SetInteraction::class, new ForwardStrategyResolver(SetStrategy::class));
+        $this->factory = new StrategyFactory();
+        $this->interceptors = [];
+        $this->exceptionHandlers = [];
     }
 
     /**
@@ -68,19 +65,21 @@ class Forwarder
         // Interceptors might change the status of the interaction.
         // That's why we check if the status is still pending after the interceptors are notified.
         // In the case that the interaction no longer has status pending, we skip the forwarding and return.
-        if (! $interaction->hasStatus(Status::PENDING)) {
-            return new ConcludedInteraction($interaction, $caller);
+        if ($interaction->hasStatus(Status::PENDING)) {
+            $strategy = $this->factory->make($interaction, $caller);
+
+            if (is_null($strategy)) {
+                throw new StrategyNullException($interaction);
+            }
+
+            $this->tryExecuting($strategy);
+
+            if ($interaction instanceof WithResult) {
+                $interaction->setResult($strategy->getResult());
+            }
+
+            $interaction->setStatus(Status::FULFILLED);
         }
-
-        $strategy = $this->newStrategy($interaction, $caller);
-
-        $this->tryExecuting($strategy);
-
-        if ($interaction instanceof InteractsAndReturnsResult) {
-            $interaction->setResult($strategy->getResult());
-        }
-
-        $interaction->setStatus(Status::FULFILLED);
 
         return new ConcludedInteraction($interaction, $caller);
     }
@@ -157,9 +156,9 @@ class Forwarder
      * Try to execute the given strategy.
      * Forwards any thrown exceptions to the exception handler.
      *
-     * @param ForwardStrategy $strategy
+     * @param Strategy $strategy
      */
-    protected function tryExecuting(ForwardStrategy $strategy): void
+    protected function tryExecuting(Strategy $strategy): void
     {
         try {
             $strategy->execute();
@@ -184,26 +183,6 @@ class Forwarder
         if ($exception->shouldThrow()) {
             throw $exception->getException();
         }
-    }
-
-    /**
-     * Create a new forward strategy for the given interaction.
-     *
-     * @param Interaction $interaction
-     * @param object|null $caller
-     * @return ForwardStrategy
-     */
-    protected function newStrategy(Interacts $interaction, object $caller = null): ForwardStrategy
-    {
-        $class = get_class($interaction);
-
-        if (! array_key_exists($class, $this->strategyResolvers)) {
-            throw new ForwardStrategyMissingException($interaction);
-        }
-
-        $resolver = $this->strategyResolvers[$class];
-
-        return $resolver->resolve($interaction, $caller);
     }
 
     /**
@@ -236,6 +215,25 @@ class Forwarder
     # --- Getters and Setters ---
 
     /**
+     * @return StrategyFactory
+     */
+    public function getFactory(): StrategyFactory
+    {
+        return $this->factory;
+    }
+
+    /**
+     * @param StrategyFactory $factory
+     * @return Forwarder
+     */
+    public function setFactory(StrategyFactory $factory): Forwarder
+    {
+        $this->factory = $factory;
+
+        return $this;
+    }
+
+    /**
      * @return Intercepts[]
      */
     public function getInterceptors(): array
@@ -255,20 +253,20 @@ class Forwarder
     }
 
     /**
-     * @return array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>>
+     * @return array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Forwarder\Strategies\Strategy>>
      */
-    public function getStrategyResolvers(): array
+    public function getFactories(): array
     {
-        return $this->strategyResolvers;
+        return $this->factories;
     }
 
     /**
-     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, Closure> $strategyResolvers
+     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, Closure> $factories
      * @return Forwarder
      */
-    public function setStrategyResolvers(array $strategyResolvers): static
+    public function setFactories(array $factories): static
     {
-        $this->strategyResolvers = $strategyResolvers;
+        $this->factories = $factories;
 
         return $this;
     }
@@ -277,12 +275,12 @@ class Forwarder
      * Sets a strategy for a specific interaction type
      *
      * @param callable-string<\JesseGall\Proxy\Contracts\Intercepts> $interaction
-     * @param ForwardStrategyResolver $resolver
+     * @param StrategyFactory $factory
      * @return $this
      */
-    public function setStrategyResolver(string $interaction, ForwardStrategyResolver $resolver): static
+    public function registerStrategyFactory(string $interaction, StrategyFactory $factory): static
     {
-        $this->strategyResolvers[$interaction] = $resolver;
+        $this->factories[$interaction] = $factory;
 
         return $this;
     }

@@ -3,9 +3,10 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Contracts\HandlesCache;
+use JesseGall\Proxy\Forwarder\Forwarder;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
+use JesseGall\Proxy\Interactions\Contracts\WithResult;
 use JesseGall\Proxy\Interactions\GetInteraction;
 use JesseGall\Proxy\Interactions\SetInteraction;
 
@@ -13,7 +14,7 @@ use JesseGall\Proxy\Interactions\SetInteraction;
  * @template T
  * @mixin T
  */
-class Proxy implements \ArrayAccess
+class Proxy
 {
     /**
      * The target of the proxy.
@@ -30,26 +31,29 @@ class Proxy implements \ArrayAccess
     protected ?Proxy $parent;
 
     /**
-     * // TODO
+     * The decorate mode.
+     * This determines when a result should be wrapped in a proxy.
      *
      * @var DecorateMode
      */
     protected DecorateMode $decorateMode;
 
     /**
-     * // TODO
+     * Indicates if the cache is enabled.
      *
      * @var bool
      */
     protected bool $cacheEnabled;
 
     /**
+     * The cache handler.
+     *
      * @var Cache
      */
-    protected HandlesCache $cache;
+    protected HandlesCache $cacheHandler;
 
     /**
-     * The interaction forwarder of the proxy.
+     * The interaction forwarder.
      *
      * @var Forwarder
      */
@@ -63,15 +67,15 @@ class Proxy implements \ArrayAccess
     protected array $history;
 
     /**
-     * T $subject
+     * T $target
      */
-    public function __construct(object|array $target)
+    public function __construct(object $target)
     {
-        $this->target = is_object($target) ? $target : new TargetArray($target);
+        $this->target = $target;
         $this->parent = null;
         $this->decorateMode = DecorateMode::EQUALS;
-        $this->cacheEnabled = true;
-        $this->cache = new Cache();
+        $this->cacheEnabled = false;
+        $this->cacheHandler = new Cache();
         $this->forwarder = new Forwarder();
         $this->history = [];
     }
@@ -116,46 +120,30 @@ class Proxy implements \ArrayAccess
         $this->processInteraction(new SetInteraction($this->target, $property, $value));
     }
 
-    public function offsetExists(mixed $offset): bool
-    {
-        return isset($this->target[$offset]);
-    }
-
-    public function offsetGet(mixed $offset): mixed
-    {
-        return $this->__get($offset);
-    }
-
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        $this->__set($offset, $value);
-    }
-
-    public function offsetUnset(mixed $offset): void
-    {
-        unset($this->target[$offset]);
-    }
-
     /**
-     * // TODO
+     * Process and log an interaction.
+     * When cache is enabled, return the cached result if available.
+     *
+     * @param Interacts $interaction
+     * @return mixed
      */
     protected function processInteraction(Interacts $interaction): mixed
     {
-        if ($this->cacheEnabled && $this->cache->has($interaction)) {
-            $cached = $this->cache->get($interaction);
+        if ($this->cacheEnabled && $this->cacheHandler->has($interaction)) {
+            $cached = $this->cacheHandler->get($interaction);
 
             $concluded = new ConcludedInteraction($cached->getInteraction(), $cached->getCaller(), true);
         } else {
             $concluded = $this->forwarder->forward($interaction, $this->getCaller());
 
             if ($this->cacheEnabled) {
-                $this->cache->put($concluded);
+                $this->cacheHandler->put($concluded);
             }
         }
 
         $this->logInteraction($concluded);
 
-        if ($concluded->getInteraction() instanceof InteractsAndReturnsResult) {
+        if ($concluded->getInteraction() instanceof WithResult) {
             return $this->decorateResult($concluded);
         }
 
@@ -163,7 +151,7 @@ class Proxy implements \ArrayAccess
     }
 
     /**
-     * // TODO
+     * Wraps the result of a concluded interaction when the value is an object
      *
      * @param ConcludedInteraction $interaction
      * @return mixed
@@ -297,7 +285,7 @@ class Proxy implements \ArrayAccess
     /**
      * @return bool
      */
-    public function isCacheEnabled(): bool
+    public function cacheEnabled(): bool
     {
         return $this->cacheEnabled;
     }
@@ -316,18 +304,18 @@ class Proxy implements \ArrayAccess
     /**
      * @return HandlesCache
      */
-    public function getCache(): HandlesCache
+    public function getCacheHandler(): HandlesCache
     {
-        return $this->cache;
+        return $this->cacheHandler;
     }
 
     /**
-     * @param HandlesCache $cache
+     * @param HandlesCache $cacheHandler
      * @return Proxy
      */
-    public function setCache(HandlesCache $cache): Proxy
+    public function setCacheHandler(HandlesCache $cacheHandler): Proxy
     {
-        $this->cache = $cache;
+        $this->cacheHandler = $cacheHandler;
 
         return $this;
     }

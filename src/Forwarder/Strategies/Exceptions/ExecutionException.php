@@ -1,19 +1,19 @@
 <?php
 
-namespace JesseGall\Proxy\Strategies\Exceptions;
+namespace JesseGall\Proxy\Forwarder\Strategies\Exceptions;
 
 use Exception;
-use JesseGall\Proxy\Strategies\ForwardStrategy;
+use JesseGall\Proxy\Forwarder\Strategies\Strategy;
 
 class ExecutionException extends Exception
 {
 
-    protected ForwardStrategy $strategy;
+    protected Strategy $strategy;
     protected Exception $exception;
     protected bool $shouldThrow;
 
 
-    public function __construct(ForwardStrategy $strategy, Exception $exception)
+    public function __construct(Strategy $strategy, Exception $exception)
     {
         parent::__construct("Execution of forward strategy failed");
 
@@ -23,9 +23,9 @@ class ExecutionException extends Exception
     }
 
     /**
-     * @return ForwardStrategy
+     * @return Strategy
      */
-    public function getStrategy(): ForwardStrategy
+    public function getStrategy(): Strategy
     {
         return $this->strategy;
     }

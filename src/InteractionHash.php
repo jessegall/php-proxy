@@ -3,9 +3,10 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithAndModifiesProperty;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithProperty;
+use JesseGall\Proxy\Interactions\Contracts\InvokesMethod;
+use JesseGall\Proxy\Interactions\Contracts\MutatesProperty;
+use JesseGall\Proxy\Interactions\Contracts\RetrievesAndModifiesProperty;
+use JesseGall\Proxy\Interactions\Contracts\RetrievesProperty;
 
 class InteractionHash
 {
@@ -24,15 +25,15 @@ class InteractionHash
             get_class($this->interacts->getTarget()),
         ];
 
-        if ($this->interacts instanceof InteractsWithProperty) {
+        if ($this->interacts instanceof RetrievesProperty) {
             $segments[] = $this->interacts->getProperty();
         }
 
-        if ($this->interacts instanceof InteractsWithAndModifiesProperty) {
+        if ($this->interacts instanceof MutatesProperty) {
             $segments[] = $this->interacts->getValue();
         }
 
-        if ($this->interacts instanceof InteractsWithMethod) {
+        if ($this->interacts instanceof InvokesMethod) {
             $segments[] = $this->interacts->getMethod();
             $segments[] = serialize($this->interacts->getParameters());
         }

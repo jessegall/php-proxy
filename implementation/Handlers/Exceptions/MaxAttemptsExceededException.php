@@ -2,7 +2,7 @@
 
 namespace JesseGall\Proxy\Implementation\Handlers\Exceptions;
 
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 
 class MaxAttemptsExceededException extends \RuntimeException
 {

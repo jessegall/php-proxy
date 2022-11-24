@@ -4,9 +4,9 @@ namespace JesseGall\Proxy\Interactions;
 
 use JesseGall\Proxy\Interactions\Concerns\HasProperty;
 use JesseGall\Proxy\Interactions\Concerns\HasValue;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithAndModifiesProperty;
+use JesseGall\Proxy\Interactions\Contracts\MutatesProperty;
 
-class SetInteraction extends Interaction implements InteractsWithAndModifiesProperty
+class SetInteraction extends Interaction implements MutatesProperty
 {
     use HasProperty, HasValue;
 

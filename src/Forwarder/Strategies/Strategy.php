@@ -1,16 +1,14 @@
 <?php
 
-namespace JesseGall\Proxy\Strategies;
+namespace JesseGall\Proxy\Forwarder\Strategies;
 
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
-use JesseGall\Proxy\Interactions\Interaction;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 
 /**
  * @template T of Interacts
  */
-abstract class ForwardStrategy
+abstract class Strategy
 {
 
     /**
@@ -91,9 +89,9 @@ abstract class ForwardStrategy
 
     /**
      * @param mixed $result
-     * @return ForwardStrategy
+     * @return Strategy
      */
-    public function setResult(mixed $result): ForwardStrategy
+    public function setResult(mixed $result): Strategy
     {
         $this->result = $result;
 

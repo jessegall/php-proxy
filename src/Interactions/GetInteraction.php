@@ -4,10 +4,10 @@ namespace JesseGall\Proxy\Interactions;
 
 use JesseGall\Proxy\Interactions\Concerns\HasProperty;
 use JesseGall\Proxy\Interactions\Concerns\HasResult;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithProperty;
+use JesseGall\Proxy\Interactions\Contracts\WithResult;
+use JesseGall\Proxy\Interactions\Contracts\RetrievesProperty;
 
-class GetInteraction extends Interaction implements InteractsWithProperty, InteractsAndReturnsResult
+class GetInteraction extends Interaction implements RetrievesProperty
 {
     use HasProperty, HasResult;
 

@@ -3,10 +3,13 @@
 namespace Tests;
 
 use JesseGall\Proxy\DecorateMode;
+use JesseGall\Proxy\Forwarder\Exceptions\StrategyNullException;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Strategies\Strategy;
+use JesseGall\Proxy\Forwarder\StrategyFactory;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Status;
 use JesseGall\Proxy\Proxy;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
 use Tests\TestClasses\TestException;
 use Tests\TestClasses\TestSubject;
 
@@ -137,6 +140,8 @@ class ProxyTest extends TestCase
     {
         $proxy = new Proxy($this->subject);
 
+        $proxy->setCacheEnabled(true);
+
         $proxy->method(); // First call
 
         $proxy->method(); // Should be retrieved from cache
@@ -158,7 +163,7 @@ class ProxyTest extends TestCase
 
         $interaction = $proxy->getHistory()[0]->getInteraction();
 
-        $this->assertEmpty($proxy->getCache()->has($interaction));
+        $this->assertEmpty($proxy->getCacheHandler()->has($interaction));
     }
 
     public function test_interactions_are_logged()
@@ -193,6 +198,22 @@ class ProxyTest extends TestCase
         $interaction = $proxy->getHistory()[0];
 
         $this->assertSame($this, $interaction->getCaller());
+    }
+
+    public function test_exception_is_thrown_when_no_strategy_is_found()
+    {
+        $proxy = new Proxy($this->subject);
+
+        $proxy->getForwarder()->setFactory(new class extends StrategyFactory {
+            public function make(Interacts $interaction, object $caller = null): ?Strategy
+            {
+                return null;
+            }
+        });
+
+        $this->expectException(StrategyNullException::class);
+
+        $proxy->method();
     }
 
 }

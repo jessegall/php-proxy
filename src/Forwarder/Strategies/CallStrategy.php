@@ -1,16 +1,16 @@
 <?php
 
-namespace JesseGall\Proxy\Strategies;
+namespace JesseGall\Proxy\Forwarder\Strategies;
 
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
+use JesseGall\Proxy\Interactions\Contracts\InvokesMethod;
 
 /**
- * @extends ForwardStrategy<\JesseGall\Proxy\Interactions\CallInteraction>
+ * @extends Strategy<\JesseGall\Proxy\Interactions\CallInteraction>
  */
-class CallStrategy extends ForwardStrategy
+class CallStrategy extends Strategy
 {
 
-    public function __construct(InteractsWithMethod $interaction, object $caller = null)
+    public function __construct(InvokesMethod $interaction, object $caller = null)
     {
         parent::__construct($interaction, $caller);
     }

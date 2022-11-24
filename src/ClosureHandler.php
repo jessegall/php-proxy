@@ -3,7 +3,7 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 
 /**
  * @extends ClosureDelegate<\JesseGall\Proxy\Contracts\HandlesFailedStrategies>

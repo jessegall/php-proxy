@@ -1,18 +1,17 @@
 <?php
 
-namespace JesseGall\Proxy\Strategies;
+namespace JesseGall\Proxy\Forwarder\Strategies;
 
 
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithProperty;
-use JesseGall\Proxy\Interactions\SetInteraction;
+use JesseGall\Proxy\Interactions\Contracts\MutatesProperty;
 
 /**
- * @extends ForwardStrategy<SetInteraction>
+ * @extends Strategy<\JesseGall\Proxy\Interactions\SetInteraction>
  */
-class SetStrategy extends ForwardStrategy
+class SetStrategy extends Strategy
 {
 
-    public function __construct(InteractsWithProperty $interaction, object $caller = null)
+    public function __construct(MutatesProperty $interaction, object $caller = null)
     {
         parent::__construct($interaction, $caller);
     }

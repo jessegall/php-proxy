@@ -2,7 +2,7 @@
 
 namespace JesseGall\Proxy\Contracts;
 
-use JesseGall\Proxy\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
 
 interface HandlesFailedStrategies
 {

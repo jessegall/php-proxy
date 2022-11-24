@@ -4,10 +4,10 @@ namespace JesseGall\Proxy\Interactions;
 
 use JesseGall\Proxy\Interactions\Concerns\HasMethodAndParameters;
 use JesseGall\Proxy\Interactions\Concerns\HasResult;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
-use JesseGall\Proxy\Interactions\Contracts\InteractsWithMethod;
+use JesseGall\Proxy\Interactions\Contracts\WithResult;
+use JesseGall\Proxy\Interactions\Contracts\InvokesMethod;
 
-class CallInteraction extends Interaction implements InteractsWithMethod, InteractsAndReturnsResult
+class CallInteraction extends Interaction implements InvokesMethod
 {
     use HasResult, HasMethodAndParameters;
 

@@ -3,7 +3,7 @@
 namespace JesseGall\Proxy;
 
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InteractsAndReturnsResult;
+use JesseGall\Proxy\Interactions\Contracts\WithResult;
 use JesseGall\Proxy\Interactions\Status;
 
 /**
@@ -94,7 +94,7 @@ class ConcludedInteraction
      */
     public function getResult(): mixed
     {
-        if ($this->interaction instanceof InteractsAndReturnsResult) {
+        if ($this->interaction instanceof WithResult) {
             return $this->interaction->getResult();
         }
 

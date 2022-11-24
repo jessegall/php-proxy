@@ -2,7 +2,7 @@
 
 namespace JesseGall\Proxy\Interactions\Contracts;
 
-interface InteractsWithMethod extends Interacts
+interface InvokesMethod extends Interacts, WithResult
 {
 
     public function getMethod(): string;
