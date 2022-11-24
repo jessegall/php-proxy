@@ -26,12 +26,4 @@ class ClosureDelegate
         return ($this->closure)(...$args);
     }
 
-    /**
-     * @return Closure
-     */
-    public function getClosure(): Closure
-    {
-        return $this->closure;
-    }
-
 }

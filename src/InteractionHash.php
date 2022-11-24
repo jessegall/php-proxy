@@ -40,9 +40,4 @@ class InteractionHash
         return md5(implode(':', $segments));
     }
 
-    public function __toString(): string
-    {
-        return $this->generate();
-    }
-
 }

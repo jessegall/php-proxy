@@ -2,8 +2,6 @@
 
 namespace Tests;
 
-use JesseGall\Proxy\Cache;
-use JesseGall\Proxy\ConcludedInteraction;
 use JesseGall\Proxy\DecorateMode;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
 use JesseGall\Proxy\Interactions\Status;
@@ -139,30 +137,28 @@ class ProxyTest extends TestCase
     {
         $proxy = new Proxy($this->subject);
 
-        $retrieved = false;
-
-        $proxy->setCache(new class($retrieved) extends Cache {
-
-            private bool $retrieved;
-
-            public function __construct(bool &$retrieved)
-            {
-                $this->retrieved = &$retrieved;
-            }
-
-            public function get(Interacts $interaction): ConcludedInteraction
-            {
-                $this->retrieved = true;
-
-                return parent::get($interaction);
-            }
-        });
-
         $proxy->method(); // First call
 
         $proxy->method(); // Should be retrieved from cache
 
-        $this->assertTrue($retrieved);
+        $history = $proxy->getHistory();
+
+        $this->assertFalse($history[0]->isFromCache());
+
+        $this->assertTrue($history[1]->isFromCache());
+    }
+
+    public function test_interactions_will_not_be_cached_when_cache_is_disabled()
+    {
+        $proxy = new Proxy($this->subject);
+
+        $proxy->setCacheEnabled(false);
+
+        $proxy->method();
+
+        $interaction = $proxy->getHistory()[0]->getInteraction();
+
+        $this->assertEmpty($proxy->getCache()->has($interaction));
     }
 
     public function test_interactions_are_logged()
@@ -186,6 +182,17 @@ class ProxyTest extends TestCase
         $result = $proxy->getChild();
 
         $this->assertInstanceOf(Proxy::class, $result);
+    }
+
+    public function test_caller_is_correctly_set()
+    {
+        $proxy = new Proxy($this->subject);
+
+        $proxy->method();
+
+        $interaction = $proxy->getHistory()[0];
+
+        $this->assertSame($this, $interaction->getCaller());
     }
 
 }
