@@ -142,11 +142,15 @@ class Proxy implements \ArrayAccess
     protected function processInteraction(Interacts $interaction): mixed
     {
         if ($this->cacheEnabled && $this->cache->has($interaction)) {
-            $concluded = $this->cache->get($interaction);
+            $cached = $this->cache->get($interaction);
+
+            $concluded = new ConcludedInteraction($cached->getInteraction(), $cached->getCaller(), true);
         } else {
             $concluded = $this->forwarder->forward($interaction, $this->getCaller());
 
-            $this->cache->put($concluded);
+            if ($this->cacheEnabled) {
+                $this->cache->put($concluded);
+            }
         }
 
         $this->logInteraction($concluded);

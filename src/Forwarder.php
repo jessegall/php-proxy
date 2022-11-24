@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use JesseGall\Proxy\Contracts\HandlesFailedStrategies;
 use JesseGall\Proxy\Contracts\Intercepts;
+use JesseGall\Proxy\Contracts\ResolvesForwardStrategy;
 use JesseGall\Proxy\Exceptions\ForwardStrategyMissingException;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -26,13 +27,9 @@ class Forwarder
     /**
      * Mapping of the forward strategies.
      *
-     * @var array<class-string<\JesseGall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>>
+     * @var array<class-string<\JesseGall\Proxy\Interactions\Interaction>, ResolvesForwardStrategy>
      */
-    protected array $strategies = [
-        CallInteraction::class => CallStrategy::class,
-        GetInteraction::class => GetStrategy::class,
-        SetInteraction::class => SetStrategy::class,
-    ];
+    protected array $strategyResolvers = [];
 
     /**
      * The registered interceptors.
@@ -47,6 +44,13 @@ class Forwarder
      * @var HandlesFailedStrategies[]
      */
     protected array $exceptionHandlers = [];
+
+    public function __construct()
+    {
+        $this->setStrategyResolver(CallInteraction::class, new ForwardStrategyResolver(CallStrategy::class));
+        $this->setStrategyResolver(GetInteraction::class, new ForwardStrategyResolver(GetStrategy::class));
+        $this->setStrategyResolver(SetInteraction::class, new ForwardStrategyResolver(SetStrategy::class));
+    }
 
     /**
      * Forward the interaction to the target and return concluded interaction.
@@ -191,13 +195,15 @@ class Forwarder
      */
     protected function newStrategy(Interacts $interaction, object $caller = null): ForwardStrategy
     {
-        $type = $this->getStrategy(get_class($interaction));
+        $class = get_class($interaction);
 
-        if (is_null($type)) {
+        if (! array_key_exists($class, $this->strategyResolvers)) {
             throw new ForwardStrategyMissingException($interaction);
         }
 
-        return new $type($interaction, $caller);
+        $resolver = $this->strategyResolvers[$class];
+
+        return $resolver->resolve($interaction, $caller);
     }
 
     /**
@@ -251,43 +257,32 @@ class Forwarder
     /**
      * @return array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>>
      */
-    public function getStrategies(): array
+    public function getStrategyResolvers(): array
     {
-        return $this->strategies;
+        return $this->strategyResolvers;
     }
 
     /**
-     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>> $strategies
+     * @param array<class-string<\Jessegall\Proxy\Interactions\Interaction>, Closure> $strategyResolvers
      * @return Forwarder
      */
-    public function setStrategies(array $strategies): static
+    public function setStrategyResolvers(array $strategyResolvers): static
     {
-        $this->strategies = $strategies;
+        $this->strategyResolvers = $strategyResolvers;
 
         return $this;
-    }
-
-    /**
-     * Get the strategy for a specific interaction type
-     *
-     * @param class-string<\JesseGall\Proxy\Contracts\Intercepts> $interception
-     * @return class-string<\JesseGall\Proxy\Strategies\ForwardStrategy>|null
-     */
-    public function getStrategy(string $interception): ?string
-    {
-        return $this->strategies[$interception] ?? null;
     }
 
     /**
      * Sets a strategy for a specific interaction type
      *
      * @param callable-string<\JesseGall\Proxy\Contracts\Intercepts> $interaction
-     * @param class-string<\JesseGall\Proxy\Strategies\ForwardStrategy> $strategy
+     * @param ForwardStrategyResolver $resolver
      * @return $this
      */
-    public function setStrategy(string $interaction, string $strategy): static
+    public function setStrategyResolver(string $interaction, ForwardStrategyResolver $resolver): static
     {
-        $this->strategies[$interaction] = $strategy;
+        $this->strategyResolvers[$interaction] = $resolver;
 
         return $this;
     }

@@ -34,13 +34,19 @@ class ConcludedInteraction
     private ?object $caller;
 
     /**
+     * @var bool
+     */
+    private bool $fromCache;
+
+    /**
      * @param T $interaction
      */
-    public function __construct(Interacts $interaction, object $caller = null)
+    public function __construct(Interacts $interaction, object $caller = null, bool $fromCache = false)
     {
         $this->interaction = $interaction;
         $this->timestamp = microtime(true);
         $this->caller = $caller;
+        $this->fromCache = $fromCache;
     }
 
     /**
@@ -93,6 +99,14 @@ class ConcludedInteraction
         }
 
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFromCache(): bool
+    {
+        return $this->fromCache;
     }
 
 
