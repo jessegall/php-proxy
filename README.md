@@ -8,12 +8,12 @@ A package that allows you to easily cache, intercept and modify interactions bet
 composer require jessegall/proxy
 ```
 
-## What can it do?
+## Usage
 
 1. [Cache interactions](#cache-interactions)
-    1. [Clear cache](#clear-cache)
-    2. [Custom cache handler](#custom-cache-handler)
-    3. [Interaction hash](#interaction-hash)
+2. [Intercept interactions](#intercept-interactions)
+3. [Cancel interactions](#cache-interactions)
+4. [Exception handling](#exception-handling)
 
 ### Cache interactions
 
@@ -116,7 +116,7 @@ $hash = $interaction->toHash();
 
 Interceptors can be used to intercept any interaction with an object.
 
-#### Register with closure
+#### Register interceptor with closure
 
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -129,7 +129,7 @@ $proxy->getForwarder()->registerInterceptor(function (Interacts $interacts) {
 });
 ```
 
-#### Register with class instance
+#### Register interceptor with class instance
 
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -150,7 +150,7 @@ $proxy = new Proxy($target);
 $proxy->getForwarder()->registerInterceptor(new MyInterceptor());
 ```
 
-#### Register with class string
+#### Register interceptor with class string
 
 ```php
 use JesseGall\Proxy\Proxy;
@@ -160,7 +160,7 @@ $proxy = new Proxy($target);
 $proxy->getForwarder()->registerInterceptor(MyInterceptor::class);
 ```
 
-#### Register multiple with an array
+#### Register interceptor multiple with an array
 
 ```php
 use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
@@ -177,7 +177,7 @@ $proxy->getForwarder()->registerInterceptor([
 ]);
 ```
 
-#### Example
+#### Examples
 
 In this example an interceptor is used to log interactions
 
@@ -233,7 +233,7 @@ $proxy->registerInterceptor(function(Interacts $interaction) {
 })
 ```
 
-#### Example
+#### Examples
 
 For this example lets say you have an api class, and you want to limit the method calls per user without refactoring the
 api class.
@@ -297,7 +297,7 @@ $proxy->registerInterceptor(function(Interacts $interaction) {
 
 ---
 
-### Exception handlers
+### Exception handling
 
 Exceptions thrown by an interaction can be caught using exception handlers
 
@@ -362,4 +362,49 @@ $proxy->getForwarder()->registerExceptionHandler([
     new MyExceptionHandler(),
     MyExceptionHandler::class,
 ]);
+```
+
+#### Examples
+
+In this example an api has a request limit.
+The exception handler will catch the 'too many request' exception and wait until we're able to make new requests.
+
+```php
+use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
+use JesseGall\Proxy\Proxy;
+
+$proxy = new Proxy($api);
+
+$handler = function (ExecutionException $exception) {
+    $attempts = 1;
+
+    $original = $exception->getException();
+
+    do {
+        if ($original->getCode() !== 429) {
+            return; // Return if the exception is not a too many request exception
+        }
+
+        if ($attempts >= 10) {
+            return; // Return when max attempts reached
+        }
+
+        sleep(10); // Wait 10 seconds before trying again
+
+        try {
+            $exception->getStrategy()->execute();
+
+            $exception->setShouldThrow(false); // Don't throw exception after successful execution
+
+            return;
+        } catch (ExecutionException $exception) {
+            $original = $exception->getException();
+        }
+
+        $attempts++;
+    } while (true);
+};
+
+$proxy->getForwarder()->registerExceptionHandler($handler);
+
 ```
