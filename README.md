@@ -12,8 +12,9 @@ composer require jessegall/proxy
 
 1. [Cache interactions](#cache-interactions)
 2. [Intercept interactions](#intercept-interactions)
-3. [Cancel interactions](#cache-interactions)
+3. [Cancel interactions](#cancel-interactions)
 4. [Exception handling](#exception-handling)
+5. [Listeners](#listeners)
 
 ### Cache interactions
 
@@ -68,7 +69,7 @@ $proxy->getCacheHandler()->clear();
 #### Custom cache handler
 
 By default the cache only remembers the interactions for the duration of the program.
-But it is very easy to create your own custom cache handler that implements a persistent cache.
+But it is very easy to create your own custom cache handler to implements a persistent cache.
 
 ```php
 use JesseGall\Proxy\Contracts\HandlesCache;
@@ -116,7 +117,7 @@ $hash = $interaction->toHash();
 
 Interceptors can be used to intercept any interaction with an object.
 
-#### Register interceptor with closure
+#### Register with closure
 
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -129,7 +130,7 @@ $proxy->getForwarder()->registerInterceptor(function (Interacts $interacts) {
 });
 ```
 
-#### Register interceptor with class instance
+#### Register with class instance
 
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -150,7 +151,7 @@ $proxy = new Proxy($target);
 $proxy->getForwarder()->registerInterceptor(new MyInterceptor());
 ```
 
-#### Register interceptor with class string
+#### Register with class string
 
 ```php
 use JesseGall\Proxy\Proxy;
@@ -160,7 +161,7 @@ $proxy = new Proxy($target);
 $proxy->getForwarder()->registerInterceptor(MyInterceptor::class);
 ```
 
-#### Register interceptor multiple with an array
+#### Register multiple with an array
 
 ```php
 use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
@@ -177,46 +178,7 @@ $proxy->getForwarder()->registerInterceptor([
 ]);
 ```
 
-#### Examples
-
-In this example an interceptor is used to log interactions
-
-```php
-class Target
-{
-
-    public string $property = 'value';
-
-    public function someMethod(): void
-    {
-        ...
-    }
-
-}
-
-$target = new Target();
-
-$proxy = new Proxy($target);
-
-$proxy->getForwarder()->registerInterceptor(function (Interacts $interaction) {
-    // Log method call
-    if ($interaction instanceof InvokesMethod) {
-        log("Method {$interaction->getMethod()} of target called at " . time());
-    }
-
-    // Log property change
-    if ($interaction instanceof MutatesProperty) {
-        log("Property {$interaction->getProperty()} changed to {$interaction->getValue()} " . time());
-    }
-    
-    if ($interaction instanceof  RetrievesProperty) {
-    
-    }
-});
-
-$proxy->someMethod(); // Will log the method call
-$proxy->property = 'new value'; // Will log that the property changed
-```
+---
 
 ### Cancel interactions
 
@@ -227,20 +189,24 @@ When an interaction no longer has the status pending, the interaction will not b
 use JesseGall\Proxy\Interactions\Status;
 
 $proxy->registerInterceptor(function(Interacts $interaction) {
-    $interaction->setStatus(Status::CANCELLED); // Signal the interaction has been cancelled
-    $interaction->setStatus(Status::FAILED);  // Signal the interaction failed
-    $interaction->setStatus(Status::FULFILLED);  // Signal the interaction was already fulfilled
+    // Signal the interaction has been cancelled
+    $interaction->setStatus(Status::CANCELLED);
+     
+    // Signal the interaction failed
+    $interaction->setStatus(Status::FAILED);  
+    
+    // Signal the interaction was already fulfilled
+    $interaction->setStatus(Status::FULFILLED);  
 })
 ```
 
 #### Examples
 
-For this example lets say you have an api class, and you want to limit the method calls per user without refactoring the
-api class.
+In this example we limit a users access to a certain api method
 
 ```php
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
-use JesseGall\Proxy\Interactions\Contracts\InvokesMethod;
+use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Status;
 use JesseGall\Proxy\Proxy;
 
@@ -262,25 +228,31 @@ class ApiProxy extends Proxy
         parent::__construct(new Api());
 
         $this->forwarder->registerInterceptor(function (Interacts $interaction) {
-            if ($interaction instanceof InvokesMethod) {
-                $user = user();
+            if (! ($interaction instanceof CallInteraction)) {
+               return; // Return if the interaction is not a method call 
+            }
+            
+            $user = user();
 
-                $method = $interaction->getMethod();
+            $method = $interaction->getMethod();
 
-                if ($user->getApiCalls($method) >= 5) {
-                    $interaction->setStatus(Status::CANCELLED);
+            if ($user->getApiCalls($method) >= 5) {
+                $interaction->setStatus(Status::CANCELLED);
 
-                    $interaction->setResult([
-                        'message' => 'You reached the api call limit'
-                    ]);
-                } else {
-                    $user->incrementApiCalls($method);
-                }
+                $interaction->setResult(new ApiLimitResponse()); 
+            } else {
+                $user->incrementApiCalls($method);
             }
         });
     }
 
 }
+
+$api = new Api();
+
+$proxy = new Proxy($api);
+
+$proxy->getPosts(); // Interceptor will run before forwarding the interaction
 ```
 
 Of course, it is also possible to simply throw an exception in the interceptor
@@ -366,7 +338,7 @@ $proxy->getForwarder()->registerExceptionHandler([
 
 #### Examples
 
-In this example an api has a request limit.
+In this example the target api has a request limit.
 The exception handler will catch the 'too many request' exception and wait until we're able to make new requests.
 
 ```php
@@ -382,7 +354,7 @@ $handler = function (ExecutionException $exception) {
 
     do {
         if ($original->getCode() !== 429) {
-            return; // Return if the exception is not a too many request exception
+            return; // Return if the exception is not a 'too many request' exception
         }
 
         if ($attempts >= 10) {
@@ -407,4 +379,74 @@ $handler = function (ExecutionException $exception) {
 
 $proxy->getForwarder()->registerExceptionHandler($handler);
 
+```
+
+---
+
+### Listeners
+
+Listeners can be used to listen to concluded interactions.
+
+#### Register with closure
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\ConcludedInteraction;
+
+$proxy = new Proxy($target);
+
+$proxy->registerListener(function (ConcludedInteraction $interaction) {
+    ...
+});
+```
+
+#### Register with class instance
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\ConcludedInteraction;
+use JesseGall\Proxy\Contracts\Listener;
+
+class MyListener implements Listener {
+
+    public function handle(ConcludedInteraction $interaction): void
+    {
+        ...
+    }
+
+}
+
+$proxy = new Proxy($target);
+
+$proxy->registerListener(new MyListener());
+```
+
+#### Register with class string
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\ConcludedInteraction;
+use JesseGall\Proxy\Contracts\Listener;
+
+$proxy = new Proxy($target);
+
+$proxy->registerListener(MyListener::class);
+```
+
+#### Register multiple with an array
+
+```php
+use JesseGall\Proxy\Proxy;
+use JesseGall\Proxy\ConcludedInteraction;
+use JesseGall\Proxy\Contracts\Listener;
+
+$proxy = new Proxy($target);
+
+$proxy->registerListener([
+    function(ConcludedInteraction $interaction) {
+        ...
+    },
+    new MyListener(),
+    MyListener::class
+]);
 ```
