@@ -7,6 +7,8 @@ use JesseGall\Proxy\Interactions\Contracts\WithResult;
 use JesseGall\Proxy\Interactions\Status;
 
 /**
+ * The ConcludedInteraction class contains information about the original interaction.
+ *
  * @template T of Interaction
  */
 class ConcludedInteraction

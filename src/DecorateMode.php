@@ -2,21 +2,26 @@
 
 namespace JesseGall\Proxy;
 
+
+/**
+ * This is a PHP enum definition for a DecorateMode class,
+ * which provides a set of constants that can be used to determine when a result should be wrapped in a Proxy object.
+ */
 enum DecorateMode
 {
 
     /**
-     * Never wrap the result in proxy
+     * Indicates that the result should never be wrapped in a Proxy object.
      */
     case NEVER;
 
     /**
-     * Only wrap the result in proxy when the value is the target
+     * Indicates that the result should only be wrapped in a Proxy object if it is equal to the target object of the Proxy
      */
     case EQUALS_TARGET;
 
     /**
-     * Always wrap the result in proxy when the value is an object
+     * Indicates that the result should always be wrapped in a Proxy object if it is an object.
      */
     case ALWAYS;
 
