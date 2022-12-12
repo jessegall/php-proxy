@@ -1,6 +1,8 @@
 # php-proxy
 
-A package that allows you to easily cache, intercept and modify interactions between objects.
+A PHP library that provides a way to intercept and modify the behavior of objects by intercepting method calls, property accesses, and property assignments and forwarding them to a target object.
+
+The goal of this library is to provide a flexible and extensible way to intercept and modify the behavior of objects.
 
 ## Installation
 
