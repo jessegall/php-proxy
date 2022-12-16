@@ -1,6 +1,6 @@
 # php-proxy
 
-A PHP library that provides a way to intercept and modify the behavior of objects by intercepting method calls, property accesses, and property assignments. 
+A PHP library that provides a convenient way to intercept and modify the behavior of objects by intercepting method calls, property accesses, and property assignments. 
 
 The goal of this library is to provide a flexible and extensible way to intercept and modify the behavior of objects without modifying the target object itself.
 

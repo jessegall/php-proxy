@@ -2,8 +2,7 @@
     "name": "jessegall/proxy",
     "autoload": {
         "psr-4": {
-            "JesseGall\\Proxy\\": "src/",
-            "JesseGall\\Proxy\\Implementation\\": "implementation/"
+            "JesseGall\\Proxy\\": "src/"
         }
     },
     "autoload-dev": {
