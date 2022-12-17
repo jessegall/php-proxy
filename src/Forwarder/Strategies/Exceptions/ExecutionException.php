@@ -12,7 +12,6 @@ class ExecutionException extends Exception
     protected Exception $exception;
     protected bool $shouldThrow;
 
-
     public function __construct(Strategy $strategy, Exception $exception)
     {
         parent::__construct("Execution of forward strategy failed");

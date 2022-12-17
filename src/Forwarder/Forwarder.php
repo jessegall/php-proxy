@@ -5,7 +5,7 @@ namespace JesseGall\Proxy\Forwarder;
 use Closure;
 use Exception;
 use JesseGall\Proxy\ConcludedInteraction;
-use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedExecutions;
 use JesseGall\Proxy\Forwarder\Contracts\Intercepts;
 use JesseGall\Proxy\Forwarder\Exceptions\StrategyNullException;
 use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
@@ -36,7 +36,7 @@ class Forwarder
     /**
      * The registered exception handlers
      *
-     * @var HandlerContainer<HandlesFailedStrategies>
+     * @var HandlerContainer<HandlesFailedExecutions>
      */
     protected HandlerContainer $exceptionHandlers;
 
@@ -97,10 +97,10 @@ class Forwarder
     /**
      * Register an exception handler.
      *
-     * @param HandlesFailedStrategies|Closure|string|array $handler
+     * @param HandlesFailedExecutions|Closure|string|array $handler
      * @return void
      */
-    public function registerExceptionHandler(HandlesFailedStrategies|Closure|string|array $handler): void
+    public function registerExceptionHandler(HandlesFailedExecutions|Closure|string|array $handler): void
     {
         $this->exceptionHandlers->registerHandlers($handler);
     }

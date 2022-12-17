@@ -293,9 +293,9 @@ $proxy->getForwarder()->registerExceptionHandler(function (ExectionException $ex
 ```php
 use JesseGall\Proxy\Proxy;
 use JesseGall\Proxy\Forwarder\Strategies\Exceptions\ExecutionException;
-use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedExecutions;
 
-class MyExceptionHandler implements HandlesFailedStrategies {
+class MyExceptionHandler implements HandlesFailedExecutions {
 
     public function handle(ExecutionException $exception): void
     {

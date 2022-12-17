@@ -5,7 +5,7 @@ namespace JesseGall\Proxy;
 use Closure;
 use JesseGall\Proxy\Contracts\HandlesCache;
 use JesseGall\Proxy\Contracts\Listener;
-use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedStrategies;
+use JesseGall\Proxy\Forwarder\Contracts\HandlesFailedExecutions;
 use JesseGall\Proxy\Forwarder\Forwarder;
 use JesseGall\Proxy\Interactions\CallInteraction;
 use JesseGall\Proxy\Interactions\Contracts\Interacts;
@@ -187,10 +187,10 @@ class Proxy
     }
 
     /**
-     * @param HandlesFailedStrategies|Closure|string|array $listener
+     * @param HandlesFailedExecutions|Closure|string|array $listener
      * @return void
      */
-    public function registerListener(HandlesFailedStrategies|Closure|string|array $listener): void
+    public function registerListener(HandlesFailedExecutions|Closure|string|array $listener): void
     {
         $this->listeners->registerHandlers($listener);
     }
