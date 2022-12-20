@@ -56,4 +56,13 @@ trait HasMethodAndParameters
 
         return $this;
     }
+
+    /**
+     * @param int $index
+     * @return mixed
+     */
+    public function getParameter(int $index): mixed
+    {
+        return $this->parameters[$index] ?? null;
+    }
 }

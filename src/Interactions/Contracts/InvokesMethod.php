@@ -13,4 +13,6 @@ interface InvokesMethod extends Interacts, WithResult
 
     public function setParameters(array $parameters): static;
 
+    public function getParameter(int $index): mixed;
+
 }
