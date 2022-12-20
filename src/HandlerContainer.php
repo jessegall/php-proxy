@@ -51,6 +51,16 @@ class HandlerContainer
     }
 
     /**
+     * Call handlers
+     *
+     * @return void
+     */
+    public function clear(): void
+    {
+        $this->handlers = [];
+    }
+
+    /**
      * @return Handler[]
      */
     public function getHandlers(): array
